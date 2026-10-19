@@ -26,5 +26,18 @@
 
   <script src="js/landing.js"></script>
   <script src="js/cursor.js"></script>
+  <!-- home 从后面透出来 -->
+  <iframe id="homeFrame" src="home.html" style="position:fixed;inset:0;width:100%;height:100%;border:none;z-index:0;opacity:0;pointer-events:none;"></iframe>
+  <!-- 地面透视线 -->
+  <div id="ground" style="position:fixed;bottom:0;left:0;right:0;height:40vh;z-index:-1;
+    background:linear-gradient(to top, #e8e8e8 0%, transparent 100%);
+    transform-origin:bottom center;"></div>
+  <!-- 像素风进度条 -->
+  <div id="walkProgress" style="position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:100;display:none;">
+    <div style="font-family:'Press Start 2P',monospace;font-size:24px;color:#1A1A1A;text-align:center;margin-bottom:16px;" id="progressText">0%</div>
+    <div style="width:500px;height:32px;border:5px solid #1A1A1A;background:#fff;position:relative;">
+      <div id="progressBar" style="height:100%;width:0%;background:#1A1A1A;transition:width 0.1s linear;"></div>
+    </div>
+  </div>
 </body>
 </html>

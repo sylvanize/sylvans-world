@@ -139,9 +139,122 @@
   });
 
   // 页面空白处点击 -> 跳转主站（企鹅的点击已被上面 stopPropagation 拦下）
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+  let leaving = false;
+
   landing.addEventListener('click', function () {
-    location.href = 'home.html';
+    if (leaving) return;
+    if (isMobile) {
+      location.href = 'home.html';
+      return;
+    }
+    // 电脑端：进入 W/S 控制模式，企鹅往里走
+    enterWalkMode();
   });
+
+  /* ---------- W/S 控制模式：企鹅往前走，index 消失 home 出现 ---------- */
+  function enterWalkMode() {
+    leaving = true;
+    stopAnimation();
+    // 新建一个走路企鹅，从原来企鹅的位置平滑过渡过去
+    const oldPenguin = queue.querySelector('img');
+    const rect = oldPenguin.getBoundingClientRect();
+    const penguin = document.createElement('img');
+    penguin.style.position = 'fixed';
+    penguin.style.left = rect.left + 'px';
+    penguin.style.top = rect.top + 'px';
+    penguin.style.width = rect.width + 'px';
+    penguin.style.zIndex = 100;
+    penguin.style.transition = 'left 0.6s ease, top 0.6s ease, width 0.6s ease, transform 0.15s linear';
+    penguin.style.imageRendering = 'pixelated';
+    document.body.appendChild(penguin);
+    // 隐藏原来的所有跺脚企鹅
+    queue.querySelectorAll('img').forEach(p => p.style.display = 'none');
+    // 平滑移动到屏幕中间
+    requestAnimationFrame(() => {
+      penguin.style.left = '50%';
+      penguin.style.top = 'auto';
+      penguin.style.bottom = '15vh';
+      penguin.style.width = '180px';
+      penguin.style.transform = 'translateX(-50%)';
+    });
+    // 换成背面走路帧
+    const walkFrames = [
+      'assets/penguins/walk0.jpg',
+      'assets/penguins/walk1.jpg',
+      'assets/penguins/walk2.jpg',
+      'assets/penguins/walk3.jpg'
+    ];
+    const walkImgs = walkFrames.map(src => { const im = new Image(); im.src = src; return im; });
+    penguin.src = walkFrames[0];
+    // 企鹅移到屏幕中间偏下
+    penguin.style.position = 'fixed';
+    penguin.style.left = '50%';
+    penguin.style.bottom = '15vh';
+    penguin.style.width = '180px';
+    penguin.style.transform = 'translateX(-50%)';
+    penguin.style.transition = 'transform 0.2s linear';
+    // 标题先不淡出，跟着模糊效果走，最后再淡出
+    const titleEl = document.querySelector('.landing-title');
+
+    // 显示进度条
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    document.getElementById('walkProgress').style.display = 'block';
+
+    let depth = 0;
+    const speed = 0.025;
+    const frame = document.getElementById('homeFrame');
+    const ground = document.getElementById('ground');
+    let walkIdx = 0;
+
+    // 走路帧循环
+    const walkTimer = setInterval(() => {
+      walkIdx = (walkIdx + 1) % 4;
+      penguin.src = walkFrames[walkIdx];
+    }, 160);
+
+    document.addEventListener('keydown', function walkKey(e) {
+      if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') {
+        depth = Math.min(1, depth + speed);
+      } else if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') {
+        depth = Math.max(0, depth - speed);
+      } else {
+        return;
+      }
+      // smoothstep 缓动
+      const ease = depth * depth * (3 - 2 * depth);
+      // 企鹅：变小、上移（往远处走）
+      const scale = 1.2 - ease * 0.8;
+      const y = ease * -200;
+      penguin.style.transform = `translateX(-50%) translateY(${y}px) scale(${scale})`;
+      // 地面透视：越走越窄、往上移
+      if (ground) {
+        ground.style.transform = `scaleX(${1 - ease * 0.6}) scaleY(${1 - ease * 0.3})`;
+        ground.style.opacity = 0.3 + ease * 0.3;
+      }
+      // 视角：标题清晰→逐渐透明，home从后面透出来
+      landing.style.opacity = 1 - depth;
+      if (frame) frame.style.opacity = depth;
+      // 更新进度条
+      const pct = Math.round(ease * 100);
+      progressBar.style.width = pct + '%';
+      progressText.textContent = pct + '%';
+      // 走到尽头
+      if (depth >= 1) {
+        clearInterval(walkTimer);
+        document.removeEventListener('keydown', walkKey);
+        // 淡出后直接跳转 home
+        landing.style.transition = 'opacity 0.5s ease';
+        penguin.style.transition = 'opacity 0.5s ease';
+        progressBar.parentElement.parentElement.style.transition = 'opacity 0.5s ease';
+        landing.style.opacity = '0';
+        penguin.style.opacity = '0';
+        progressBar.parentElement.parentElement.style.opacity = '0';
+        setTimeout(() => location.href = 'home.html', 500);
+      }
+    });
+  }
 
   /* ---------- ⑨ 初始化：先放 1 只企鹅，然后开始跺脚 ---------- */
 
