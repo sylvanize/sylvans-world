@@ -18,7 +18,11 @@
    所以加新照片集完全不用碰本文件。
    ===================================================================== */
 
-const CDN = 'https://res.cloudinary.com/jwjttap0/image/upload/w_1600,q_auto,f_auto/';
+// 电脑原图，手机小图
+const IS_MOBILE = window.matchMedia('(max-width: 768px)').matches;
+const CDN = IS_MOBILE
+  ? 'https://res.cloudinary.com/jwjttap0/image/upload/w_1000,q_auto,f_auto/'
+  : 'https://res.cloudinary.com/jwjttap0/image/upload/q_auto,f_auto/';
 
 (function () {
   if (typeof SITE === 'undefined') return;

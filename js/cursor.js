@@ -1,14 +1,16 @@
 /* 全站海豚自定义光标：p1 正常 / p2 点击态（悬停可点元素时） */
 (function () {
   if (window.matchMedia('(pointer: coarse)').matches) return; // 触屏跳过
+  // 自动判断路径：在 friend-pages/ 子目录就往上找
+  const base = location.pathname.includes('/friend-pages/') ? '../' : './';
   var css = document.createElement('style');
   css.textContent =
     '*,*::before,*::after{cursor:none!important;}' +
     '.rm-cursor{position:fixed;top:0;left:0;width:40px;height:40px;pointer-events:none;z-index:9999;' +
-      'background:url(assets/cursor.png) no-repeat center/contain;' +
+      'background:url(' + base + 'assets/cursor.png) no-repeat center/contain;' +
       'transform:translate(-12%,-12%);transition:width .15s ease,height .15s ease;}' +
     '.rm-cursor.click{width:52px;height:52px;' +
-      'background-image:url(assets/cursor-click.png);}';
+      'background-image:url(' + base + 'assets/cursor-click.png);}';
   document.head.appendChild(css);
 
   var dot = document.createElement('div');
