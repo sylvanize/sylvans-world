@@ -1,6 +1,46 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <!-- ============================================================
+       📖 以后想加内容，看这里：
+       ============================================================
+
+       【加照片到摄影页】
+       1. 把照片放进 photos/你的相册名/ 文件夹，命名 photo-01.jpg, photo-02.jpg...
+       2. 封面图命名 cover.jpg
+       3. 打开 js/data.js，在 SITE.places 数组里加一条：
+          { id: "你的相册英文名", name: "中文名", country: "中国", date: "2026.11", intro: "一句话介绍", photos: [] }
+       4. 跑上传脚本把新图传到 Cloudinary（见下面）
+       5. git add -A && git commit -m "add photos" && git push
+
+       【加新朋友】
+       1. 在 friends/ 文件夹新建 friend8/solo/avatar.jpg（单人头像）
+       2. friends/friend8/together/ 放合照，命名 photo-01.jpg, photo-02.jpg...
+       3. 复制 friend-pages/friend7.html 改名为 friend8.html，改里面的名字和 friend id
+       4. 打开 home.html，在朋友头像那一栏加一个 <a> 标签（复制 friend7 那行改 id 和名字）
+       5. 跑上传脚本传新图到 Cloudinary
+       6. git push
+
+       【加诗歌】
+       1. 打开 poems.html，复制一段诗的 HTML 结构，改文字
+       2. git push
+
+       【加电影/书/音乐到 another me】
+       1. 打开 another-me-app/src/data.js
+       2. 在 films / books / music 数组里加一条
+       3. 电影封面：放进 covers/films/，改 cover 字段为 CDN 地址
+       4. 跑 npm run build（在 another-me-app 文件夹里）
+       5. 把新生成的 assets/index-xxx.js 复制到根目录 assets/
+       6. 改 another-me.html 里引用的 JS 文件名
+       7. git push
+
+       【图片上传到 Cloudinary（必做！不然线上看不到新图）】
+       终端跑：
+         python3 upload_to_cloudinary.py
+       它会自动把 photos/ friends/ covers/ 里的新图传到 CDN。
+       不传的话线上图片会裂图。
+
+       ============================================================ -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>sylvan's world</title>
