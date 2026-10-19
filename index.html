@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>sylvan's world</title>
+  <!-- 标题字体（Playfair Display 衬线体，保持原来的观感） -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
+  <!-- 三个独立文件：样式 + 逻辑 全部外链，方便维护 -->
+  <link rel="stylesheet" href="css/landing.css">
+</head>
+<body class="landing-page">
+  <!--
+    彩蛋设计说明：
+    - 页面加载完默认有 1 只企鹅，自动播放"跺脚"帧动画
+    - 点击企鹅 -> 新增一只（上限 6 只）；满员后再点 -> 所有企鹅愣住 3 秒
+    - 点击页面空白处 -> 跳转 home.html（点击企鹅不会触发跳转）
+    - 不显示任何提示文字 / 数量面板
+  -->
+  <div class="landing" id="landing">
+    <h1 class="landing-title">sylvan's world</h1>
+    <div class="penguin-queue" id="penguinQueue"></div>
+  </div>
+
+  <script src="js/landing.js"></script>
+  <script src="js/cursor.js"></script>
+</body>
+</html>

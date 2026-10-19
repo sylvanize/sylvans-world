@@ -1,0 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+
+html {
+  scroll-behavior: smooth;
+  background: #000;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #000;
+  color: #E6E5E5;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}

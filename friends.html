@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>朋友 · sylvan's world</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="nav">
+    <a href="home.html" class="nav-logo">sylvan</a>
+    <div class="nav-links">
+      <a href="photos.html">摄影</a>
+      <a href="friends.html">朋友</a>
+      <a href="another-me.html">another me</a>
+    </div>
+  </nav>
+
+  <header class="page-header">
+    <a class="back-link" href="home.html">← 返回主页</a>
+    <h1 class="page-title">朋友</h1>
+    <p class="page-subtitle">一些合照</p>
+  </header>
+
+  <main class="friends-page">
+    <div class="friends-circles" id="friends-circles"></div>
+    
+    <div class="friends-gallery hidden" id="friends-gallery">
+      <button class="back-btn" id="back-to-friends">← 返回</button>
+      <div class="gallery-grid" id="friends-gallery-grid"></div>
+    </div>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/friends.js"></script>
+  <script src="js/cursor.js"></script>
+</body>
+</html>

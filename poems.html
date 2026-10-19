@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>haiku · sylvan's world</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/swiper-bundle.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      background: #E1DEDB;
+      color: #282828;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow: hidden;
+      cursor: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== 自定义海豚光标 ===== */
+    .rm-cursor {
+      position: fixed; top: 0; left: 0;
+      width: 40px; height: 40px;
+      background: url('assets/cursor.png') no-repeat center / contain;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-12%, -12%);
+      transition: width .15s ease, height .15s ease;
+    }
+    .rm-cursor.click {
+      width: 52px; height: 52px;
+      background-image: url('assets/cursor-click.png');
+    }
+
+    /* ===== 顶部导航 ===== */
+    .poem-nav {
+      position: fixed; top: 28px; left: 0; right: 0;
+      z-index: 50;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0 48px;
+    }
+    .poem-nav a {
+      color: #282828; text-decoration: none;
+      font-size: 15px; letter-spacing: .04em;
+      opacity: .75; transition: opacity .2s;
+      cursor: none;
+    }
+    .poem-nav a:hover { opacity: 1; }
+    .poem-nav .brand {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-style: italic; font-size: 22px; opacity: .85; letter-spacing: 0;
+    }
+
+    /* ===== 翻页 swiper ===== */
+    .poems-swiper { width: 100%; height: 100vh; }
+    .poem-slide {
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 14vw;
+    }
+    .poem-lines { text-align: center; max-width: 64vw; }
+    .poem-lines p {
+      font-size: clamp(22px, 2.3vw, 38px);
+      font-weight: 300;
+      line-height: 1.75;
+      letter-spacing: .05em;
+      margin: 0 0 .4em;
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+    .poem-lines p:last-child { margin-bottom: 0; }
+    .swiper-slide-active .poem-lines p { opacity: 1; transform: none; }
+    .swiper-slide-active .poem-lines p:nth-child(1) { transition-delay: .05s; }
+    .swiper-slide-active .poem-lines p:nth-child(2) { transition-delay: .18s; }
+    .swiper-slide-active .poem-lines p:nth-child(3) { transition-delay: .31s; }
+    .poem-date {
+      margin-top: 1.6em;
+      font-size: 13px; letter-spacing: .2em;
+      opacity: 0; transition: opacity .6s ease .45s;
+      text-transform: uppercase;
+    }
+    .swiper-slide-active .poem-date { opacity: .5; }
+
+    /* ===== 底部：序号 + 箭头 ===== */
+    .poem-foot {
+      position: fixed; bottom: 30px; left: 0; right: 0;
+      z-index: 50;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0 48px;
+      font-size: 14px; opacity: .7;
+    }
+    .poem-arrow {
+      background: none; border: none;
+      font-size: 22px; color: #282828; opacity: .7;
+      cursor: none; padding: 6px 16px;
+      transition: opacity .2s;
+    }
+    .poem-arrow:hover { opacity: 1; }
+
+    @media (max-width: 768px) {
+      .poem-nav { padding: 0 20px; }
+      .poem-foot { padding: 0 20px; }
+      .poem-slide { padding: 0 8vw; }
+      .poem-lines { max-width: 84vw; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="poem-nav">
+    <a href="home.html" class="brand">sylvan</a>
+    <a href="home.html">← back</a>
+  </nav>
+
+  <div class="swiper poems-swiper">
+    <div class="swiper-wrapper" id="poemWrapper"></div>
+  </div>
+
+  <div class="poem-foot">
+    <span id="poemCounter">1 / 10</span>
+    <div>
+      <button class="poem-arrow" id="poemPrev" aria-label="上一首">←</button>
+      <button class="poem-arrow" id="poemNext" aria-label="下一首">→</button>
+    </div>
+  </div>
+
+  <div class="rm-cursor" id="rmCursor"></div>
+
+  <script src="js/poems.js"></script>
+  <script src="js/swiper-bundle.min.js"></script>
+  <script>
+  (function () {
+    /* ---------- 渲染俳句 slide（数据全在 js/poems.js） ---------- */
+    var wrapper = document.getElementById('poemWrapper');
+    POEMS.forEach(function (p) {
+      var slide = document.createElement('div');
+      slide.className = 'swiper-slide poem-slide';
+      var html = '<div class="poem-lines">';
+      p.lines.forEach(function (line) { html += '<p>' + line + '</p>'; });
+      html += '</div>';
+      if (p.date) html += '<div class="poem-date">' + p.date + '</div>';
+      slide.innerHTML = html;
+      wrapper.appendChild(slide);
+    });
+
+    /* ---------- Swiper：横向翻页 ---------- */
+    var swiper = new Swiper('.poems-swiper', {
+      direction: 'horizontal',
+      slidesPerView: 1,
+      speed: 600,
+      allowTouchMove: true,
+      resistanceRatio: 0.85,
+      on: {
+        slideChange: function () {
+          document.getElementById('poemCounter').textContent =
+            (this.activeIndex + 1) + ' / ' + this.slides.length;
+        }
+      }
+    });
+
+    /* ---------- 箭头 / 键盘 ---------- */
+    document.getElementById('poemNext').addEventListener('click', function () { swiper.slideNext(); });
+    document.getElementById('poemPrev').addEventListener('click', function () { swiper.slidePrev(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') swiper.slideNext();
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') swiper.slidePrev();
+    });
+
+    /* ---------- 滚轮 / 双指横滑：累积阈值翻一屏，翻后锁 600ms（跟相册同款手感） ---------- */
+    var wAcc = 0, wLock = false;
+    document.addEventListener('wheel', function (e) {
+      if (wLock) { wAcc = 0; return; }
+      var dx = Math.abs(e.deltaX), dy = Math.abs(e.deltaY);
+      var d = dx >= dy ? e.deltaX : e.deltaY;
+      wAcc += d;
+      if (Math.abs(wAcc) < 50) return;
+      var dir = wAcc > 0 ? 1 : -1;
+      wAcc = 0;
+      if (dir > 0) swiper.slideNext(); else swiper.slidePrev();
+      wLock = true;
+      setTimeout(function () { wLock = false; }, 600);
+    }, { passive: true });
+
+    /* ---------- 海豚光标跟随 ---------- */
+    var cur = document.getElementById('rmCursor');
+    var cx = -100, cy = -100, tx = -100, ty = -100, raf = null;
+    function loop() {
+      cx += (tx - cx) * 0.35; cy += (ty - cy) * 0.35;
+      cur.style.left = cx + 'px'; cur.style.top = cy + 'px';
+      raf = null;
+      if (Math.abs(tx - cx) > 0.5 || Math.abs(ty - cy) > 0.5) raf = requestAnimationFrame(loop);
+    }
+    document.addEventListener('mousemove', function (e) {
+      tx = e.clientX; ty = e.clientY;
+      if (!raf) raf = requestAnimationFrame(loop);
+    });
+    document.addEventListener('mouseover', function (e) {
+      if (e.target.closest('a, button')) cur.classList.add('click');
+    });
+    document.addEventListener('mouseout', function (e) {
+      if (e.target.closest('a, button')) cur.classList.remove('click');
+    });
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,858 @@
+:root {
+  --bg: #FFFFFF;
+  --text: #1A1A1A;
+  --text-dim: #8A8A8A;
+  --text-subtle: #6A6A6A;
+  --surface: #F5F5F5;
+  --surface-hover: #E8E8E8;
+  --accent: #1A1A1A;
+  --line: #E0E0E0;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* 导航 */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  mix-blend-mode: difference;
+}
+
+.nav a {
+  color: white;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.nav a:hover {
+  opacity: 1;
+}
+
+.nav-logo {
+  font-weight: 500;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+}
+
+/* 进入页 */
+.landing-page {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.landing {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg);
+  cursor: pointer;
+  text-align: center;
+}
+
+.landing-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 6vw, 5rem);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+  color: var(--text);
+}
+
+.landing-hint {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* 主页布局 */
+.home-main {
+  padding-top: 6rem;
+}
+
+/* 介绍区 */
+.intro-section {
+  display: flex;
+  align-items: flex-start;
+  padding: 3rem 0 6rem 0;
+  min-height: 85vh;
+}
+
+.intro-photo {
+  flex-shrink: 0;
+  width: 270px;
+  margin-left: 2rem;
+  margin-top: 4rem;
+}
+
+.photo-placeholder {
+  width: 270px;
+  height: 360px;
+  background: var(--surface);
+  border-radius: 0 1.2rem 1.2rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-photo {
+  width: 270px;
+  height: 360px;
+  object-fit: cover;
+  border-radius: 0 1.2rem 1.2rem 0;
+}
+
+.photo-placeholder span {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.intro-text {
+  flex: 1;
+  padding-left: 270px;
+  padding-right: 8vw;
+  display: flex;
+  flex-direction: column;
+  min-height: 360px;
+}
+
+.intro-title {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(3rem, 9vw, 7rem);
+  font-weight: 700;
+  letter-spacing: -0.07em;
+  line-height: 0.88;
+  margin-bottom: 0.5rem;
+  ;
+
+  ;
+}
+
+.intro-sub {
+  font-size: 0.95rem;
+  color: var(--text-subtle);
+  margin-bottom: 2rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.intro-desc {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--text-subtle);
+  margin-bottom: 2.5rem;
+  max-width: 32rem;
+}
+
+.intro-contact {
+  font-size: 0.95rem;
+  color: var(--text);
+  margin-bottom: auto;
+}
+
+.intro-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  font-size: 0.9rem;
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--line);
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.meta-item:last-child {
+  text-align: right;
+}
+
+.meta-label {
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  text-transform: lowercase;
+}
+
+.meta-value {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.meta-item:last-child .meta-value {
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+/* 地图区 */
+.map-section {
+  padding: 4rem 0;
+}
+
+/* 通用 section */
+.photos-section,
+.friends-section,
+.another-me-section {
+  padding: 8rem 8vw;
+  border-top: 1px solid var(--line);
+}
+
+.section-heading {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  margin-bottom: 2rem;
+}
+
+.section-sub {
+  font-size: 1rem;
+  color: var(--text-subtle);
+  margin-bottom: 2rem;
+}
+
+/* 摄影预览 */
+.photos-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.photo-preview-card {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: var(--surface);
+  overflow: hidden;
+  cursor: pointer;
+  border-radius: 0.8rem;
+}
+
+.photo-preview-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(30%);
+  transition: filter 0.4s ease;
+}
+
+.photo-preview-card:hover img {
+  filter: grayscale(0%);
+}
+
+.photo-preview-card .card-label {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  color: white;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+/* 朋友圆形头像 */
+.friends-circles {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.friend-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: var(--surface);
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+  border: 3px solid transparent;
+}
+
+.friend-circle:hover {
+  transform: scale(1.05);
+  border-color: var(--accent);
+}
+
+.friend-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.friend-circle span {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* another me 入口 */
+.enter-link {
+  display: inline-block;
+  font-size: 1rem;
+  color: var(--text);
+  border-bottom: 1px solid var(--accent);
+  padding-bottom: 0.25rem;
+  transition: opacity 0.2s ease;
+}
+
+.enter-link:hover {
+  opacity: 0.7;
+}
+
+/* 朋友合照 */
+.friends-gallery {
+  margin-top: 2rem;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--text-subtle);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-bottom: 2rem;
+  padding: 0;
+}
+
+.back-btn:hover {
+  color: var(--text);
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.gallery-grid img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  filter: grayscale(20%);
+  transition: filter 0.3s ease;
+  cursor: pointer;
+  border-radius: 0.5rem;
+}
+
+.gallery-grid img:hover {
+  filter: grayscale(0%);
+}
+
+
+/* 页面通用 */
+.page-header {
+  padding: 10rem 5vw 4rem;
+  text-align: center;
+}
+
+.back-link {
+  display: inline-block;
+  font-size: 0.8rem;
+  color: var(--text-subtle);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 2rem;
+}
+
+.back-link:hover {
+  color: var(--text);
+}
+
+.page-title {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+  color: var(--text-subtle);
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* 摄影页 */
+.photos-page {
+  padding: 0 5vw 8rem;
+}
+
+.regions-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.region-card {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: var(--surface);
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 1rem;
+}
+
+.region-card:hover {
+  transform: scale(0.98);
+}
+
+.region-card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(40%);
+  transition: filter 0.4s ease;
+}
+
+.region-card:hover img {
+  filter: grayscale(0%);
+}
+
+.region-info {
+  position: relative;
+  z-index: 2;
+  padding: 1.5rem;
+  width: 100%;
+  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+}
+
+.region-info h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem;
+  font-weight: 400;
+  color: white;
+}
+
+.region-info p {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.7);
+  margin-top: 0.25rem;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--text-subtle);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-bottom: 2rem;
+  padding: 0;
+}
+
+.back-btn:hover {
+  color: var(--text);
+}
+
+.gallery-section h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.5rem;
+  font-weight: 400;
+  margin-bottom: 0.5rem;
+}
+
+.gallery-section > p {
+  color: var(--text-subtle);
+  margin-bottom: 2rem;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.gallery-grid img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  filter: grayscale(20%);
+  transition: filter 0.3s ease;
+  cursor: pointer;
+  border-radius: 0.5rem;
+}
+
+.gallery-grid img:hover {
+  filter: grayscale(0%);
+}
+
+/* 朋友页 */
+.friends-page {
+  padding: 0 5vw 8rem;
+}
+
+.friends-page .gallery-grid img {
+  aspect-ratio: 1;
+}
+
+/* another me 页 */
+.another-me-page {
+  padding: 0 5vw 8rem;
+}
+
+.am-section {
+  margin-bottom: 6rem;
+}
+
+.am-section-title {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 1rem;
+}
+
+.am-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.am-card {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  background: var(--surface);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 0.5rem;
+}
+
+.am-card:hover {
+  transform: scale(0.98);
+}
+
+.am-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(30%);
+  transition: filter 0.5s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.am-card:hover img {
+  filter: grayscale(0%);
+  transform: scale(1.03);
+}
+
+.am-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-hover) 100%);
+  padding: 2rem;
+  text-align: center;
+}
+
+.am-fallback span {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  color: var(--text-dim);
+}
+
+.am-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1.25rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.am-card:hover .am-overlay {
+  opacity: 1;
+}
+
+.am-overlay h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  font-weight: 400;
+  color: white;
+}
+
+.am-overlay p {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.7);
+  margin-top: 0.3rem;
+}
+
+/* another me 3D 页面 */
+.another-me-body {
+  overflow: hidden;
+  height: 100vh;
+}
+
+.another-me-main {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+.scene-container {
+  position: absolute;
+  inset: 0;
+  perspective: 1200px;
+  perspective-origin: center center;
+  overflow: hidden;
+}
+
+.scene-3d {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transition: transform 0.1s ease-out;
+}
+
+.scene-card {
+  position: absolute;
+  width: 180px;
+  aspect-ratio: 2 / 3;
+  background: var(--surface);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 0.1s ease-out;
+  top: 50%;
+  left: 50%;
+  margin-left: -90px;
+  margin-top: -135px;
+}
+
+.scene-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(20%);
+  transition: filter 0.3s ease;
+}
+
+.scene-card:hover img {
+  filter: grayscale(0%);
+}
+
+.card-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  text-align: center;
+  font-family: 'Playfair Display', serif;
+  color: var(--text-dim);
+}
+
+.scene-card-music {
+  aspect-ratio: 1;
+}
+
+.music-indicator {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+  height: 14px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.scene-card-music.playing .music-indicator,
+.scene-card-music:hover .music-indicator {
+  opacity: 1;
+}
+
+.music-indicator span {
+  width: 3px;
+  background: var(--text);
+  animation: equalizer 0.6s ease-in-out infinite;
+}
+
+.music-indicator span:nth-child(2) { animation-delay: 0.1s; }
+.music-indicator span:nth-child(3) { animation-delay: 0.2s; }
+
+@keyframes equalizer {
+  0%, 100% { height: 4px; }
+  50% { height: 14px; }
+}
+
+/* 悬停介绍 */
+.hover-info {
+  position: fixed;
+  bottom: 3rem;
+  left: 3rem;
+  max-width: 320px;
+  padding: 1.5rem;
+  background: rgba(245, 241, 234, 0.9);
+  backdrop-filter: blur(8px);
+  border-radius: 0.5rem;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.hover-info.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hover-info h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  font-weight: 400;
+  margin-bottom: 0.3rem;
+}
+
+.hover-info p {
+  font-size: 0.85rem;
+  color: var(--text-subtle);
+  line-height: 1.5;
+}
+
+.hover-info p:last-child {
+  margin-top: 0.5rem;
+  color: var(--text);
+}
+
+/* 播放指示 */
+.now-playing {
+  position: fixed;
+  bottom: 3rem;
+  right: 3rem;
+  font-size: 0.85rem;
+  color: var(--text-subtle);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 50;
+}
+
+.now-playing.visible {
+  opacity: 1;
+}
+
+.now-playing span:first-child {
+  color: var(--text-dim);
+}
+
+@media (max-width: 768px) {
+  .nav-links {
+    display: none;
+  }
+  
+  .intro-section {
+    flex-direction: column;
+    padding: 4rem 1.5rem;
+  }
+  
+  .intro-photo {
+    margin-left: 0;
+    margin-top: 0;
+    width: 100%;
+  }
+  
+  .photo-placeholder {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    aspect-ratio: 3/4;
+  }
+  
+  .intro-text {
+    padding-left: 0;
+    padding-right: 0;
+    margin-top: 2rem;
+  }
+  
+  .intro-title {
+    font-size: 2.5rem;
+  }
+  
+  .scene-card {
+    width: 120px;
+    margin-left: -60px;
+    margin-top: -90px;
+  }
+  
+  .hover-info {
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    max-width: none;
+  }
+  
+  .now-playing {
+    right: 1rem;
+    bottom: 6rem;
+  }
+}

@@ -1,0 +1,84 @@
+/* ============================================================
+   sylvan's world — 首页彩蛋样式（style.css）
+   ------------------------------------------------------------
+   设计原则：
+   1. 页面白底、极简：没有任何提示文字、数量面板
+   2. 企鹅尺寸统一、队列居中，保持像素画的清晰颗粒感
+   3. 企鹅悬浮时鼠标变成 pointer（暗示可点击）
+   注释都写了"为什么"，方便新手阅读和修改。
+   ============================================================ */
+
+/* ---------- 基础重置：去掉浏览器默认边距 ---------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ---------- 整页：占满视口、禁止滚动（进入页） ---------- */
+.landing-page {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ---------- 主容器：白底 + 垂直居中 ----------
+   注意：整个 .landing 都可以点击（跳转 home.html 的逻辑在 script.js），
+   所以这里 cursor: pointer 是"页面空白处可点"的暗示；
+   企鹅本体自己有独立的 cursor: pointer（见下方 .penguin）。 */
+.landing {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;      /* 上下排：标题在上，企鹅队列在下 */
+  align-items: center;         /* 水平居中 */
+  justify-content: center;     /* 垂直居中 */
+  background-color: #FFFFFF;   /* 纯白背景，极简 */
+  cursor: pointer;
+  text-align: center;
+}
+
+/* ---------- 大标题 ---------- */
+.landing-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 6vw, 5rem);   /* 随屏幕宽度自适应缩放 */
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: #1A1A1A;
+  margin-bottom: 2.5rem;               /* 标题和企鹅队列之间的间距 */
+}
+
+/* ---------- 企鹅队列：一排居中 ----------
+   flex-wrap: wrap 让手机小屏时企鹅自动换行，不会溢出屏幕 */
+.penguin-queue {
+  display: flex;
+  justify-content: center;   /* 水平居中 */
+  align-items: flex-end;     /* 底部对齐，所有企鹅"站在"同一水平线上 */
+  gap: 1.1rem;               /* 企鹅间距 */
+  flex-wrap: wrap;
+  max-width: 92vw;
+  padding-bottom: 1rem;      /* 底部留一点呼吸空间 */
+}
+
+/* ---------- 每只企鹅 ---------- */
+.penguin {
+  width: clamp(90px, 12vw, 150px);  /* 统一尺寸：窄屏 90px，宽屏最大 150px */
+  height: auto;                     /* 高度按图片比例自动 */
+  cursor: pointer;                  /* 悬浮变手型：提示"可点击" */
+  image-rendering: pixelated;       /* 关键：保持像素画的颗粒感，不让浏览器模糊 */
+  transition: transform 0.15s ease; /* 悬浮放大动画 */
+}
+
+/* 悬浮时轻微放大：视觉反馈，进一步提示可点击 */
+.penguin:hover {
+  transform: scale(1.06);
+}
+
+/* ---------- 新企鹅出现时的弹入动画 ---------- */
+.penguin.new {
+  animation: pop-in 0.3s ease;
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.5); }
+  to   { opacity: 1; transform: scale(1); }
+}

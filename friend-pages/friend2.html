@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>qubiao · sylvan's world</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { background: #0a0a0a; }
+    body {
+      background: #0a0a0a;
+      color: #e8e8e8;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      transition: background 0.4s ease, color 0.4s ease;
+    }
+    body.light {
+      background: #f5f3ef;
+      color: #1a1a1a;
+    }
+    ::selection { background: #e8e8e8; color: #0a0a0a; }
+    body.light ::selection { background: #1a1a1a; color: #f5f3ef; }
+
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1.5rem 2rem;
+      mix-blend-mode: difference;
+    }
+    .nav a {
+      color: #fff; text-decoration: none;
+      font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase;
+      opacity: 0.7; transition: opacity 0.2s;
+    }
+    .nav a:hover { opacity: 1; }
+
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 0 5vw 6vh;
+      position: relative;
+    }
+    .hero-name {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-weight: 400;
+      font-size: clamp(4rem, 14vw, 12rem);
+      line-height: 0.95;
+      letter-spacing: -0.02em;
+      color: #fff;
+      margin-bottom: 2rem;
+    }
+    .hero-meta {
+      font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase;
+      color: #666;
+    }
+    body.light .hero-meta { color: #999; }
+    .hero-avatar {
+      position: absolute;
+      right: 5vw; bottom: 10vh;
+      width: min(36vw, 460px);
+      aspect-ratio: 3/4;
+      overflow: hidden;
+      border-radius: 2px;
+      opacity: 0.9;
+    }
+    .hero-avatar img {
+      width: 100%; height: 100%; object-fit: cover;
+      filter: grayscale(100%) contrast(1.05);
+    }
+
+    .film-strip {
+      padding: 0 5vw;
+      column-count: 2;
+      column-gap: 2px;
+    }
+    .film-strip img,
+    .film-strip video {
+      width: 100%;
+      display: block;
+      margin-bottom: 2px;
+      break-inside: avoid;
+      filter: grayscale(100%) contrast(1.05);
+      transition: filter 0.6s ease, opacity 0.6s ease;
+    }
+    .film-strip img:hover {
+      filter: grayscale(0%) contrast(1);
+    }
+    .film-strip video { background: #000; }
+
+    .section-label {
+      padding: 12vh 5vw 3vh;
+      font-size: 0.65rem; letter-spacing: 0.35em; text-transform: uppercase;
+      color: #555;
+    }
+    body.light .section-label { color: #999; }
+
+    footer {
+      padding: 12vh 5vw 8vh;
+      display: flex; justify-content: space-between; align-items: flex-end;
+      font-size: 0.7rem; letter-spacing: 0.2em; color: #555;
+      text-transform: uppercase;
+    }
+    body.light footer { color: #999; }
+    footer a { color: #888; text-decoration: none; }
+    body.light footer a { color: #666; }
+
+    .theme-toggle {
+      position: fixed; bottom: 2rem; right: 2rem; z-index: 100;
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 1px solid #444; background: transparent; color: #888;
+      cursor: pointer; font-size: 1.1rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.3s;
+    }
+    .theme-toggle:hover { border-color: #fff; color: #fff; }
+    body.light .theme-toggle { border-color: #ccc; color: #666; }
+    body.light .theme-toggle:hover { border-color: #1a1a1a; color: #1a1a1a; }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="../home.html" class="nav-logo">sylvan</a>
+    <div style="display:flex; gap:2rem;">
+      <a href="../photos.html">摄影</a>
+      <a href="../home.html#friends">朋友</a>
+      <a href="../another-me.html">another me</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-meta">some photos of</div>
+    <h1 class="hero-name">qubiao</h1>
+    <div class="hero-avatar">
+      <img src="../friends/friend2/solo/avatar.jpg" alt="qubiao" onerror="this.parentElement.style.display='none'">
+    </div>
+  </section>
+
+  <div class="section-label">together</div>
+  <div class="film-strip" id="together"></div>
+
+  <div class="section-label">solo</div>
+  <div class="film-strip" id="solo"></div>
+
+  <footer>
+    <span>qubiao</span>
+    <a href="../home.html#friends">← back to friends</a>
+  </footer>
+
+  <button class="theme-toggle" onclick="document.body.classList.toggle('light')" title="切换主题">◐</button>
+
+  <script>
+    const id = 'friend2';
+    const t = document.getElementById('together');
+    const s = document.getElementById('solo');
+
+    for (let i = 1; i <= 30; i++) {
+      const num = String(i).padStart(2, '0');
+      const img = document.createElement('img');
+      img.src = `../friends/${id}/together/photo-${num}.jpg`;
+      img.loading = 'lazy';
+      img.onerror = () => img.remove();
+      t.appendChild(img);
+    }
+    for (let i = 1; i <= 5; i++) {
+      const num = String(i).padStart(2, '0');
+      const mp4 = `../friends/${id}/together/video-${num}.mp4`;
+      const mov = `../friends/${id}/together/video-${num}.mov`;
+      // 先检查文件是否存在，存在才创建 video
+      fetch(mp4, { method: 'HEAD' }).then(r1 => {
+        if (r1.ok) return mp4;
+        return fetch(mov, { method: 'HEAD' }).then(r2 => r2.ok ? mov : null);
+      }).then(src => {
+        if (!src) return;
+        const v = document.createElement('video');
+        v.src = src;
+        v.controls = true;
+        v.preload = 'metadata';
+        v.playsInline = true;
+        v.setAttribute('playsinline', '');
+        t.appendChild(v);
+      }).catch(() => {});
+    }
+    const solo = document.createElement('img');
+    solo.src = `../friends/${id}/solo/avatar.jpg`;
+    solo.loading = 'lazy';
+    solo.onerror = () => solo.remove();
+    s.appendChild(solo);
+  </script>
+</body>
+</html>

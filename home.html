@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>sylvan's world</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;900&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    ::selection { background: #1A1A1A; color: #fff; }
+
+    /* ============================================================
+       顶部圆角导航条（hana 同款）
+       ============================================================ */
+    .nav {
+      top: 18px; left: 18px; right: 18px;
+      padding: 12px 28px;
+      background: #F5F5F5;
+      border-radius: 999px;
+      mix-blend-mode: normal !important;
+    }
+    .nav a { color: #1A1A1A !important; font-size: .78rem; opacity: .7; transition: opacity .2s; text-transform: none; }
+    .nav a:hover { opacity: 1; }
+    .nav-logo { font-weight: 600; }
+
+    /* ============================================================
+       首屏（照 yana 布局：左照片、右文字、bottom 两角信息）
+       ============================================================ */
+    .home-main { padding-top: 0; }
+    .intro-section {
+      position: relative;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* 左照片 */
+    .intro-photo {
+      position: absolute;
+      left: 0; bottom: 17%;
+      width: 300px;
+      cursor: pointer;
+    }
+    .profile-photo {
+      width: 300px; height: 400px;
+      object-fit: cover;
+      border-radius: 8px;
+      display: block;
+      transition: transform .5s cubic-bezier(.16,1,.3,1);
+    }
+    .intro-photo:hover .profile-photo { transform: translateY(-6px); }
+
+    /* 跳舞企鹅 */
+    .penguin-dance {
+      position: absolute;
+      left: calc(100% + 30px);
+      top: 50%; transform: translateY(-50%);
+      width: 100px; pointer-events: none;
+    }
+    .penguin-dance img { width: 100%; }
+
+    /* 右文字区 */
+    .intro-text {
+      position: absolute;
+      right: 31vw; top: 18%; bottom: 13%;
+      width: 45vw;
+      display: flex; flex-direction: column;
+    }
+    .intro-title {
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(2.5rem, 7.4vw, 6.5rem);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      word-spacing: 0.15em;
+      line-height: 0.95;
+      margin: 0 0 1.5rem;
+      color: #1A1A1A;
+      white-space: nowrap;
+    }
+    .intro-sub {
+      font-size: 1.1rem; color: #1A1A1A;
+      letter-spacing: normal;
+      margin: 0 0 1.8rem; white-space: nowrap;
+      font-weight: 400;
+    }
+    .intro-desc {
+      font-size: 1.3rem; color: #6A6A6A; line-height: 1.8;
+      margin: 0 0 auto; max-width: 28em;
+      font-weight: 400;
+    }
+    /* 底部一组：based in + wechat 在 text me 上方 */
+    .intro-bottom { display: flex; flex-direction: column; align-items: flex-start; gap: .4rem; }
+    .intro-basedin { font-size: 1.15rem; color: #6A6A6A; letter-spacing: normal; margin: 0; }
+    .intro-basedin b { font-size: 1.15rem; font-weight: 400; color: #6A6A6A; letter-spacing: normal; }
+    .intro-contact { font-size: 1.15rem; color: #6A6A6A; letter-spacing: normal; margin: 0; }
+    .text-me {
+      display: inline-block;
+      width: 340px; max-width: 100%; text-align: center;
+      padding: .6rem 0;
+      background: #1A1A1A; color: #fff;
+      font-size: .95rem; border-radius: 6px; text-decoration: none;
+      transition: opacity .2s, transform .3s;
+    }
+    .text-me:hover { opacity: .85; transform: translateY(-2px); }
+
+    /* 右下角 birth（跟照片底部对齐） */
+    .corner-right { position: absolute; right: 5vw; bottom: 13%; display: flex; flex-direction: column; align-items: flex-start; gap: .2rem; }
+    .corner-label { font-size: .8rem; color: #8A8A8A; letter-spacing: .1em; text-transform: lowercase; }
+    .corner-value { font-size: clamp(2rem, 5vw, 4rem); font-weight: 900; letter-spacing: -0.04em; line-height: 1; color: #1A1A1A; }
+
+    /* 淡入动画 */
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .9s cubic-bezier(.16,1,.3,1), transform .9s cubic-bezier(.16,1,.3,1); }
+    .reveal.in { opacity: 1; transform: none; }
+
+    /* ============================================================
+       下面三个板块（摄影/朋友/another me）——原样不动
+       ============================================================ */
+    .photos-section { padding: 6rem 0; background: #FFFFFF; border-top: none; }
+    .photos-card { display: block; position: relative; width: 100%; height: 70vh; overflow: hidden; text-decoration: none; cursor: pointer; }
+    .photos-card-bg { position: absolute; inset: 0; }
+    .photos-card-bg img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%); transition: filter .5s; }
+    .photos-card:hover .photos-card-bg img { filter: grayscale(0%); }
+    .photos-title {
+      position: relative; z-index: 10; display: flex; align-items: center; justify-content: center; height: 100%;
+      font-family: 'Inter', sans-serif; font-size: clamp(3rem, 10vw, 8rem); font-weight: 900;
+      letter-spacing: -0.06em; color: #fff; text-shadow: 0 2px 20px rgba(0,0,0,.5); text-transform: lowercase;
+    }
+    .friends-section { background: #FFFFFF; padding: 6rem 0; overflow: hidden; border-top: none; }
+    .friends-title {
+      font-family: 'Inter', sans-serif; font-size: clamp(4rem, 12vw, 10rem); font-weight: 900;
+      letter-spacing: -0.06em; line-height: .9; text-align: left; margin: 0 0 3rem; padding: 0 8vw;
+      color: #1A1A1A; text-transform: uppercase;
+    }
+    .friends-track { display: flex; align-items: center; padding: 2rem 8vw; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; scroll-behavior: smooth; }
+    .friends-track::-webkit-scrollbar { display: none; }
+    .friend-avatar { flex-shrink: 0; width: 300px; height: 300px; border-radius: 50%; overflow: hidden; margin-right: -10px; transition: transform .3s; cursor: pointer; text-decoration: none; display: block; will-change: transform; }
+    .friend-avatar:last-child { margin-right: 0; }
+    .friend-avatar img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%); transition: filter .4s ease; }
+    @keyframes avatarRotate { from { transform: scale(1.08) rotate(0); } to { transform: scale(1.08) rotate(360deg); } }
+    .friend-avatar:hover { transform: scale(1.08); animation: avatarRotate 12s ease-out; z-index: 10; }
+    .friend-avatar:hover img { filter: grayscale(100%) sepia(0.7) saturate(3.2) hue-rotate(-12deg) brightness(1.05); }
+    .another-me-section { padding: 6rem 8vw; background: transparent; border-top: none; }
+    .am-blue-block { background: #506488; border-radius: 16px; padding: 4rem 3rem; }
+    .am-title { font-family: 'Inter', sans-serif; font-size: clamp(4rem, 12vw, 10rem); font-weight: 900; letter-spacing: -0.06em; line-height: .9; margin: 0 0 2rem; color: #fff; text-transform: uppercase; }
+    .am-blue-block .enter-link { color: #fff; font-size: 1.2rem; }
+
+    /* 中屏（窗口缩到这里自动堆成上下） */
+    @media (max-width: 1100px) {
+      .intro-section { min-height: auto; padding: 7rem 8vw 5rem; }
+      .intro-photo { position: static; width: 60%; margin-bottom: 2rem; }
+      .profile-photo { width: 100% !important; height: auto !important; aspect-ratio: 3/4; }
+      .intro-text { position: static; width: 100%; }
+      .corner-right { position: static; margin-top: 2rem; text-align: left; }
+    }
+    /* 手机端 */
+    @media (max-width: 768px) {
+      .intro-section { min-height: auto; padding: 8rem 8vw 5rem; }
+      .intro-photo { position: static; width: 70%; margin-bottom: 2rem; }
+      .profile-photo { width: 100%; height: auto; aspect-ratio: 3/4; }
+      .intro-text { position: static; width: 100%; }
+      .corner { position: static; margin-top: 2rem; }
+      .corner-right { text-align: left; margin-top: 1rem; }
+      .friends-title { font-size: clamp(3rem,15vw,6rem); padding: 0 1.5rem; }
+      .friends-track { padding: 1.5rem; }
+      .friend-avatar { width: 100px; height: 100px; margin-right: -25px; }
+      .another-me-section { padding: 4rem 1.5rem; }
+      .am-blue-block { padding: 2.5rem 1.5rem; }
+      .am-title { font-size: clamp(3rem,15vw,6rem); }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="home.html" class="nav-logo">sylvan</a>
+    <div class="nav-links">
+      <a href="#photos">摄影</a>
+      <a href="#friends">朋友</a>
+    </div>
+    <a href="another-me.html">another me</a>
+  </nav>
+
+  <main class="home-main">
+
+    <!-- ============================================
+         首屏 —— 要改文字只动下面这一块
+         ============================================ -->
+    <section class="intro-section">
+      <!-- 左照片（点三下这个照片进隐藏页） -->
+      <div class="intro-photo reveal">
+        <div class="secret-dots" id="secretDots">
+          <span></span><span></span><span></span>
+        </div>
+        <img src="photos/profile.jpg" alt="sylvan" class="profile-photo">
+      </div>
+
+      <!-- 右文字 -->
+      <div class="intro-text">
+        <h1 class="intro-title reveal">hi, i'm sylvan</h1>
+        <p class="intro-sub reveal">law student · photo taker</p>
+        <p class="intro-desc reveal">本人陈思颖妈妈丘小红爸爸陈建章</p>
+        <div class="intro-bottom reveal">
+          <p class="intro-basedin">based in <b>somewhere</b></p>
+          <p class="intro-contact">wechat: cliche61</p>
+          <a class="text-me" href="#">text me</a>
+        </div>
+      </div>
+
+      <!-- 右下 birth -->
+      <div class="corner-right reveal">
+        <span class="corner-label">birth</span>
+        <span class="corner-value">may 20</span>
+      </div>
+    </section>
+
+    <!-- 摄影 -->
+    <section class="photos-section" id="photos">
+      <a href="photos.html" class="photos-card reveal">
+        <div class="photos-card-bg">
+          <img src="photos/camera-bg.jpg" alt="camera">
+        </div>
+        <h2 class="photos-title">take some photos</h2>
+      </a>
+    </section>
+
+    <!-- 朋友 -->
+    <section class="friends-section" id="friends">
+      <h2 class="friends-title reveal">FRIENDS</h2>
+      <div class="friends-track reveal">
+        <a href="friend-pages/friend1.html" class="friend-avatar"><img src="friends/friend1/solo/avatar.jpg" alt="friend1"></a>
+        <a href="friend-pages/friend2.html" class="friend-avatar"><img src="friends/friend2/solo/avatar.jpg" alt="friend2"></a>
+        <a href="friend-pages/friend3.html" class="friend-avatar"><img src="friends/friend3/solo/avatar.jpg" alt="friend3"></a>
+        <a href="friend-pages/friend4.html" class="friend-avatar"><img src="friends/friend4/solo/avatar.jpg" alt="friend4"></a>
+        <a href="friend-pages/friend5.html" class="friend-avatar"><img src="friends/friend5/solo/avatar.jpg" alt="friend5"></a>
+        <a href="friend-pages/friend6.html" class="friend-avatar"><img src="friends/friend6/solo/avatar.jpg" alt="friend6"></a>
+        <a href="friend-pages/friend7.html" class="friend-avatar"><img src="friends/friend7/solo/avatar.jpg" alt="friend7"></a>
+      </div>
+    </section>
+
+    <!-- another me -->
+    <section class="another-me-section" id="another-me">
+      <div class="am-blue-block reveal">
+        <h2 class="am-title">another me</h2>
+        <a href="another-me.html" class="enter-link">进入 →</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/cursor.js"></script>
+  <script>
+  /* 滚动淡入 */
+  (function () {
+    var els = document.querySelectorAll('.reveal');
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (en) {
+        if (en.isIntersecting) en.target.classList.add('in');
+        else en.target.classList.remove('in');
+      });
+    }, { threshold: .12 });
+    els.forEach(function (el) { io.observe(el); });
+  })();
+  </script>
+
+  <!-- 密码入口样式（像素风 4 格） -->
+  <style>
+    .secret-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .25s steps(3);
+    }
+    .secret-overlay.open { opacity: 1; pointer-events: auto; }
+    .secret-box {
+      text-align: center;
+      transform: scale(.7); opacity: 0;
+      transition: transform .25s steps(4), opacity .25s steps(3);
+    }
+    .secret-overlay.open .secret-box { transform: scale(1); opacity: 1; }
+    .secret-panel {
+      background: #000;
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 4px #000, 0 0 0 7px #fff;
+      padding: 2.5rem 3rem 2rem;
+    }
+    .secret-label {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 1rem; color: #fff; margin-bottom: 2rem;
+      letter-spacing: .1em;
+    }
+    .secret-slots { display: flex; gap: 1.2rem; justify-content: center; margin-bottom: 2rem; }
+    .secret-slot {
+      width: 60px; height: 80px;
+      border: 3px solid #fff;
+      background: #000;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 1.6rem; text-align: center; color: #fff;
+      outline: none; caret-color: #fff;
+    }
+    .secret-slot:focus { background: #222; }
+    .secret-hint {
+      font-size: .9rem; color: #888; margin: 0;
+    }
+    .secret-hint.wrong { color: #ff3860; }
+    .secret-overlay.shake .secret-panel { animation: shake .35s; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-14px)} 40%{transform:translateX(12px)} 60%{transform:translateX(-8px)} 80%{transform:translateX(6px)} }
+    .secret-dots { position: absolute; top: -36px; left: 0; display: flex; gap: 8px; opacity: 0; transition: opacity .3s; }
+    .secret-dots.show { opacity: .35; }
+    .secret-dots span { width: 6px; height: 6px; border-radius: 50%; background: #1A1A1A; transform: scale(0); transition: transform .3s; }
+    .secret-dots span.on { transform: scale(1); }
+  </style>
+  <div class="secret-overlay" id="secretOverlay">
+    <div class="secret-box">
+      <div class="secret-panel">
+        <div class="secret-label">INPUT CODE</div>
+        <div class="secret-slots">
+          <input class="secret-slot" maxlength="1" inputmode="numeric">
+          <input class="secret-slot" maxlength="1" inputmode="numeric">
+          <input class="secret-slot" maxlength="1" inputmode="numeric">
+          <input class="secret-slot" maxlength="1" inputmode="numeric">
+        </div>
+        <p class="secret-hint" id="secretHint">输入 4 位数字密码</p>
+      </div>
+    </div>
+  </div>
+  <script>
+  (function () {
+    var PW = '0520';
+    var count = 0;
+    var overlay = document.getElementById('secretOverlay');
+    var hint = document.getElementById('secretHint');
+    var dots = document.getElementById('secretDots');
+    var dotSpans = dots.querySelectorAll('span');
+    var slots = overlay.querySelectorAll('.secret-slot');
+
+    function bump() {
+      count++;
+      dotSpans.forEach(function (s, i) { s.classList.toggle('on', i < count); });
+      dots.classList.add('show');
+      if (count >= 3) setTimeout(openOverlay, 300);
+    }
+    function openOverlay() {
+      count = 0;
+      dotSpans.forEach(function (s) { s.classList.remove('on'); });
+      dots.classList.remove('show');
+      overlay.classList.add('open');
+      setTimeout(function () { slots[0].focus(); }, 400);
+    }
+    function closeOverlay() {
+      overlay.classList.remove('open');
+      slots.forEach(function (s) { s.value = ''; });
+      hint.textContent = '输入 4 位数字密码'; hint.classList.remove('wrong');
+    }
+    function check() {
+      var v = slots[0].value + slots[1].value + slots[2].value + slots[3].value;
+      if (v.length < 4) return;
+      if (v === PW) window.location.href = 'poems.html';
+      else {
+        overlay.classList.remove('shake'); void overlay.offsetWidth;
+        overlay.classList.add('shake');
+        hint.textContent = 'wrong, try again'; hint.classList.add('wrong');
+        slots.forEach(function (s) { s.value = ''; });
+        slots[0].focus();
+      }
+    }
+    slots.forEach(function (slot, i) {
+      slot.addEventListener('input', function () {
+        hint.classList.remove('wrong'); hint.textContent = '输入 4 位数字密码';
+        if (slot.value && i < 3) slots[i + 1].focus();
+        check();
+      });
+      slot.addEventListener('keydown', function (e) {
+        if (e.key === 'Backspace' && !slot.value && i > 0) slots[i - 1].focus();
+      });
+    });
+
+    document.querySelector('.intro-photo').addEventListener('click', bump);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && overlay.classList.contains('open')) closeOverlay();
+    });
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) closeOverlay();
+    });
+  })();
+
+  /* ============================================================
+     1. 朋友头像 hover 微动效 + 胶片咔嚓声
+     ============================================================ */
+  (function() {
+    var avatars = document.querySelectorAll('.friend-avatar');
+    function shutter() {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var buffer = ctx.createBuffer(1, ctx.sampleRate * 0.08, ctx.sampleRate);
+      var data = buffer.getChannelData(0);
+      for (var i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 3);
+      }
+      var noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      var gain = ctx.createGain();
+      gain.gain.value = 0.15;
+      noise.connect(gain); gain.connect(ctx.destination);
+      noise.start();
+    }
+    avatars.forEach(function(a) {
+      a.addEventListener('mouseenter', function() {
+        a.style.transform = 'scale(1.1) rotate(3deg)';
+        shutter();
+      });
+      a.addEventListener('mouseleave', function() {
+        a.style.transform = '';
+      });
+    });
+  })();
+
+  /* ============================================================
+     2. 鼠标轨迹黑白颗粒
+     ============================================================ */
+  (function() {
+    var last = 0;
+    document.addEventListener('mousemove', function(e) {
+      var now = Date.now();
+      if (now - last < 40) return;
+      last = now;
+      var d = document.createElement('div');
+      d.style.cssText = 'position:fixed;pointer-events:none;z-index:9999;border-radius:50%;width:' +
+        (2 + Math.random() * 4) + 'px;height:' + (2 + Math.random() * 4) +
+        'px;background:#1a1a1a;opacity:0.3;left:' + e.clientX + 'px;top:' + e.clientY + 'px;transition:opacity 1.2s, transform 1.2s;';
+      document.body.appendChild(d);
+      requestAnimationFrame(function() {
+        d.style.opacity = '0';
+        d.style.transform = 'translateY(10px)';
+      });
+      setTimeout(function() { d.remove(); }, 1200);
+    });
+  })();
+
+  /* ============================================================
+     3. 打字彩蛋：penguin
+     ============================================================ */
+  (function() {
+    var seq = 'penguin';
+    var buf = '';
+    document.addEventListener('keydown', function(e) {
+      if (e.key.length !== 1) return;
+      buf += e.key.toLowerCase();
+      if (buf.length > seq.length) buf = buf.slice(-seq.length);
+      if (buf === seq) {
+        buf = '';
+        var p = document.createElement('div');
+        p.textContent = '🐧';
+        p.style.position = 'fixed';
+        p.style.bottom = '20px';
+        p.style.left = '20px';
+        p.style.fontSize = '48px';
+        p.style.zIndex = '9999';
+        p.style.transition = 'transform 2.5s ease, opacity 2.5s ease';
+        p.style.transform = 'translateX(-100px) rotate(0)';
+        p.style.opacity = '0';
+        document.body.appendChild(p);
+        requestAnimationFrame(function() {
+          p.style.opacity = '1';
+          p.style.transform = 'translateX(calc(100vw - 80px)) rotate(360deg)';
+        });
+        setTimeout(function() { p.remove(); }, 2500);
+      }
+    });
+  })();
+  </script>
+</body>
+</html>
