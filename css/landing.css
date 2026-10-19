@@ -39,13 +39,18 @@
 
 /* ---------- 大标题 ---------- */
 .landing-title {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(2rem, 6vw, 5rem);   /* 随屏幕宽度自适应缩放 */
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(1rem, 3vw, 1.8rem);
   font-weight: 400;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
+  letter-spacing: 3px;
+  line-height: 1.4;
   color: #1A1A1A;
-  margin-bottom: 2.5rem;               /* 标题和企鹅队列之间的间距 */
+  margin-bottom: 2.5rem;
+  animation: pixelBounce 2.2s ease-in-out infinite;
+}
+@keyframes pixelBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }
 
 /* ---------- 企鹅队列：一排居中 ----------
