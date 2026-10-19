@@ -170,7 +170,7 @@
     for (let i = 1; i <= 30; i++) {
       const num = String(i).padStart(2, '0');
       const img = document.createElement('img');
-      img.src = `https://res.cloudinary.com/jwjttap0/image/upload/q_auto,f_auto/friends/${id}/together/photo-${num}.jpg`;
+      img.src = `https://res.cloudinary.com/jwjttap0/image/upload/w_1600,q_auto,f_auto/friends/${id}/together/photo-${num}.jpg`;
       img.loading = 'lazy';
       img.onerror = () => img.remove();
       t.appendChild(img);

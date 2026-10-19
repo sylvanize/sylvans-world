@@ -18,7 +18,7 @@
    所以加新照片集完全不用碰本文件。
    ===================================================================== */
 
-const CDN = 'https://res.cloudinary.com/jwjttap0/image/upload/q_auto,f_auto/';
+const CDN = 'https://res.cloudinary.com/jwjttap0/image/upload/w_1600,q_auto,f_auto/';
 
 (function () {
   if (typeof SITE === 'undefined') return;
@@ -76,8 +76,8 @@ const CDN = 'https://res.cloudinary.com/jwjttap0/image/upload/q_auto,f_auto/';
     // 鼠标停留时淡入（举起），移走淡出（放下）——纯 CSS 切换。
     el.className = 'pr-item' + (i === 0 ? ' active' : '') + (place.egg ? ' pg-egg' : '');
     el.innerHTML = `
-      <img class="pg-down" src="${CDN}photos/${place.id}/cover.jpg" alt="${place.name}" loading="lazy" onerror="this.style.display='none'">
-      ${place.egg ? `<img class="pg-up" src="${CDN}photos/${place.id}/photo-01.png" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
+      <img class="pg-down" src="${CDN}photos/${place.id}/cover.jpg" alt="${place.name}" loading="lazy" onerror="this.style.display='none'" onload="window.dispatchEvent(new Event('resize'))">
+      ${place.egg ? `<img class="pg-up" src="${CDN}photos/${place.id}/photo-01.png" alt="" loading="lazy" onerror="this.style.display='none'" onload="window.dispatchEvent(new Event('resize'))">` : ''}
       <span class="pr-name">${place.name}</span>
     `;
     // 企鹅相册点击不打开相册（hover 换装就是它的交互）
