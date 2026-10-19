@@ -18,9 +18,10 @@
   vol.addEventListener('input', function() { audio.volume = vol.value / 100; });
 
   // 音乐
-  var audio = new Audio(base + 'music.mp3');
+  var audio = new Audio();
   audio.loop = true;
   audio.volume = 0.4;
+  audio.preload = 'none';
 
   // 恢复位置
   var savedTime = parseFloat(localStorage.getItem('music_time') || '0');
@@ -33,6 +34,7 @@
 
   function play() {
     localStorage.setItem('music_started', '1');
+    if (!audio.src) audio.src = base + 'music.mp3';
     audio.play().then(function(){
       btn.innerHTML = '♪';
     }).catch(function(){});
