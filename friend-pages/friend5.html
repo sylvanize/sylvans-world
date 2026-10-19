@@ -145,7 +145,7 @@
     <div class="hero-meta">some photos of</div>
     <h1 class="hero-name">pyy</h1>
     <div class="hero-avatar">
-      <img src="https://res.cloudinary.com/jwjttap0/image/upload/w_800,q_auto,f_auto/friends/friend5/solo/avatar.jpg" alt="pyy" onerror="this.parentElement.style.display='none'">
+      <img src="https://res.cloudinary.com/jwjttap0/image/upload/q_auto,f_auto/friends/friend5/solo/avatar.jpg" alt="pyy" onerror="this.parentElement.style.display='none'">
     </div>
   </section>
 
@@ -170,7 +170,7 @@
     for (let i = 1; i <= 30; i++) {
       const num = String(i).padStart(2, '0');
       const img = document.createElement('img');
-      img.src = `https://res.cloudinary.com/jwjttap0/image/upload/w_1200,q_auto,f_auto/friends/${id}/together/photo-${num}.jpg`;
+      img.src = `https://res.cloudinary.com/jwjttap0/image/upload/q_auto,f_auto/friends/${id}/together/photo-${num}.jpg`;
       img.loading = 'lazy';
       img.onerror = () => img.remove();
       t.appendChild(img);
@@ -195,7 +195,7 @@
       }).catch(() => {});
     }
     const solo = document.createElement('img');
-    solo.src = `https://res.cloudinary.com/jwjttap0/image/upload/w_800,q_auto,f_auto/friends/${id}/solo/avatar.jpg`;
+    solo.src = `https://res.cloudinary.com/jwjttap0/image/upload/q_auto,f_auto/friends/${id}/solo/avatar.jpg`;
     solo.loading = 'lazy';
     solo.onerror = () => solo.remove();
     s.appendChild(solo);
