@@ -40,7 +40,7 @@
 /* ---------- 大标题 ---------- */
 .landing-title {
   font-family: 'Press Start 2P', monospace;
-  font-size: clamp(1rem, 3vw, 1.8rem);
+  font-size: clamp(2rem, 6vw, 4rem);
   font-weight: 400;
   letter-spacing: 3px;
   line-height: 1.4;
