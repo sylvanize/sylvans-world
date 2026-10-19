@@ -540,8 +540,12 @@
         width: 100%;
         margin-left: 0;
         padding: 0 1rem 2rem;
+        height: calc(100vh - 60px);
+        overflow-y: auto;
+        scrollbar-width: none;
       }
-      .pr-track { padding-bottom: 10vh !important; }
+      .photos-right::-webkit-scrollbar { display: none; }
+      .pr-track { padding-bottom: 10vh !important; transform: none !important; }
       .pr-item { height: auto !important; aspect-ratio: 3/2 !important; }
       .pr-count { display: none; }
 

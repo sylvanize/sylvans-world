@@ -1,7 +1,6 @@
 /* =====================================================================
    摄影总页 · 左右分栏交互（参考 grndwrk.studio）
-   --------------------------------------------------------------------- */
-const CDN = 'https://res.cloudinary.com/jwjttap0/image/upload/w_1200,q_auto,f_auto/';
+   ---------------------------------------------------------------------
    ★★★ 后期想改东西，去哪里改？（速查表） ★★★
 
    | 想改什么                            | 去哪个文件、改哪里                    |
@@ -18,6 +17,8 @@ const CDN = 'https://res.cloudinary.com/jwjttap0/image/upload/w_1200,q_auto,f_au
    数据来源：SITE.places（js/data.js）——右侧列表、左栏信息全靠它自动渲染，
    所以加新照片集完全不用碰本文件。
    ===================================================================== */
+
+const CDN = 'https://res.cloudinary.com/jwjttap0/image/upload/w_1200,q_auto,f_auto/';
 
 (function () {
   if (typeof SITE === 'undefined') return;
