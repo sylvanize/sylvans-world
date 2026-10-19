@@ -108,6 +108,16 @@
     footer a { color: #888; text-decoration: none; }
     body.light footer a { color: #666; }
 
+    @media (max-width: 768px) {
+      .nav { padding: 1rem; }
+      .hero { padding: 0 6vw 4vh; min-height: auto; padding-top: 6rem; }
+      .hero-name { font-size: clamp(3rem, 18vw, 6rem); }
+      .hero-avatar { position: relative; right: auto; bottom: auto; width: 70vw; margin: 2rem 0; }
+      .film-strip { padding: 0 4vw; column-count: 1; }
+      .section-label { padding: 6vh 6vw 2vh; }
+      footer { padding: 6vh 6vw 4vh; flex-direction: column; gap: 1rem; align-items: flex-start; }
+    }
+
     .theme-toggle {
       position: fixed; bottom: 2rem; right: 2rem; z-index: 100;
       width: 44px; height: 44px; border-radius: 50%;
@@ -135,7 +145,7 @@
     <div class="hero-meta">some photos of</div>
     <h1 class="hero-name">小雨</h1>
     <div class="hero-avatar">
-      <img src="../friends/friend4/solo/avatar.jpg" alt="小雨" onerror="this.parentElement.style.display='none'">
+      <img src="https://res.cloudinary.com/jwjttap0/image/upload/w_800,q_auto,f_auto/friends/friend4/solo/avatar.jpg" alt="小雨" onerror="this.parentElement.style.display='none'">
     </div>
   </section>
 
@@ -160,7 +170,7 @@
     for (let i = 1; i <= 30; i++) {
       const num = String(i).padStart(2, '0');
       const img = document.createElement('img');
-      img.src = `../friends/${id}/together/photo-${num}.jpg`;
+      img.src = `https://res.cloudinary.com/jwjttap0/image/upload/w_1200,q_auto,f_auto/friends/${id}/together/photo-${num}.jpg`;
       img.loading = 'lazy';
       img.onerror = () => img.remove();
       t.appendChild(img);
@@ -185,7 +195,7 @@
       }).catch(() => {});
     }
     const solo = document.createElement('img');
-    solo.src = `../friends/${id}/solo/avatar.jpg`;
+    solo.src = `https://res.cloudinary.com/jwjttap0/image/upload/w_800,q_auto,f_auto/friends/${id}/solo/avatar.jpg`;
     solo.loading = 'lazy';
     solo.onerror = () => solo.remove();
     s.appendChild(solo);

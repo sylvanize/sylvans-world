@@ -503,25 +503,50 @@
     /* 角标文字不拦截点击；返回按钮保持可点 */
     #gallery-title, #gallery-intro, #gallery-date { pointer-events: none; }
 
+    /* ---------- 中等屏幕：左栏变窄，右栏收窄 ---------- */
+    @media (max-width: 1200px) {
+      :root {
+        --ph-left-w: clamp(320px, 45vw, 600px);
+        --ph-right-w: clamp(300px, 40vw, 420px);
+        --ph-left-pad: 1.5rem;
+      }
+      .nav-desc { display: none; }
+    }
+
     /* ---------- 移动端：上下堆叠 ---------- */
     @media (max-width: 768px) {
+      .nav { padding: 1rem !important; flex-wrap: wrap; }
       .nav-desc { display: none; }
-      .photos-split { flex-direction: column; }
+      .nav-links { flex-direction: row !important; gap: 1rem !important; font-size: .65rem !important; }
+      .nav-logo { font-size: .85rem !important; }
+
+      .photos-split { flex-direction: column; height: auto; overflow: visible; }
       .photos-left {
         width: 100%;
-        padding: 7rem 1.5rem 1.5rem;
-        min-height: 44vh;
+        padding: 5rem 1.2rem 1.5rem;
+        min-height: auto;
       }
-      .pl-current { margin-top: 2.2rem; }
-      .pl-bottom { margin-top: 2rem; }
+      .pl-title { font-size: clamp(4rem, 20vw, 8rem) !important; }
+      .pl-name { font-size: clamp(1.8rem, 7vw, 2.5rem) !important; }
+      .pl-tags { font-size: .8rem !important; }
+      .pl-intro { font-size: 1rem !important; }
+      .pl-enter { font-size: 1rem !important; }
+      .pl-current { margin-top: 1.8rem; }
+      .pl-bottom { margin-top: 1.5rem; }
+      .pl-prev, .pl-next { font-size: .75rem !important; }
+
       .photos-right {
-        flex: 1;
+        flex: none;
         width: 100%;
         margin-left: 0;
-        padding: 1rem 1.5rem 1.5rem;
+        padding: 0 1rem 2rem;
       }
-      .pr-count { left: 1.5rem; top: 0.5rem; transform: none; }
-      .gallery-track img { height: 70%; }
+      .pr-track { padding-bottom: 10vh !important; }
+      .pr-item { height: auto !important; aspect-ratio: 3/2 !important; }
+      .pr-count { display: none; }
+
+      .gallery-track img { height: auto; max-height: 70vh; max-width: 92vw; }
+      .back-btn, #gallery-title, #gallery-intro, #gallery-date { font-size: 12px !important; left: 16px !important; }
     }
   </style>
 </head>
