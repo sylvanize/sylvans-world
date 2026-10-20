@@ -235,31 +235,25 @@ const CDN = IS_MOBILE
     galleryTrack.innerHTML = '';
     if (gallerySwiper) { gallerySwiper.destroy(true, true); gallerySwiper = null; }
 
-    // 预加载照片：只有加载成功的才加入轨道（否则翻过最后一张还有空屏可翻）
-    let pending = 20;
-    const finish = () => {
-      pending--;
-      if (pending > 0) return;
-      gallerySection.classList.add('open');
-      initGallerySwiper();
-    };
+    // 预加载照片：只有加载成功的才加入轨道（不等全部加载完，直接显示）
+    gallerySection.classList.add('open');
+    initGallerySwiper();
     for (let n = 1; n <= 20; n++) {
       const idx = n;
       const probe = new Image();
       probe.onload = () => {
-        const slide = document.createElement('div');   // 一屏一张
+        const slide = document.createElement('div');
         slide.className = 'swiper-slide gs';
         const im = document.createElement('img');
         im.src = probe.src;
         im.alt = `${place.name} ${idx}`;
         im.loading = 'lazy';
-        im.draggable = false;   /* 禁原生图片拖拽：否则按住拖照片会触发浏览器"拖图"劫持滑动 */
+        im.draggable = false;
         im.style.userSelect = 'none';
         slide.appendChild(im);
         galleryTrack.appendChild(slide);
-        finish();
       };
-      probe.onerror = finish;
+      probe.onerror = () => {};
       probe.src = `${CDN}photos/${place.id}/photo-${String(idx).padStart(2, '0')}.jpg`;
     }
   }
