@@ -21,8 +21,8 @@
 // 电脑原图，手机小图
 const IS_MOBILE = window.matchMedia('(max-width: 768px)').matches;
 const CDN = IS_MOBILE
-  ? 'https://res.cloudinary.com/jwjttap0/image/upload/w_1000,q_auto,f_auto/'
-  : 'https://res.cloudinary.com/jwjttap0/image/upload/q_auto,f_auto/';
+  ? 'https://res.cloudinary.com/jwjttap0/image/upload/q_auto,w_800,f_auto/'
+  : 'https://res.cloudinary.com/jwjttap0/image/upload/q_auto,w_1400,f_auto/';
 
 (function () {
   if (typeof SITE === 'undefined') return;
@@ -235,9 +235,13 @@ const CDN = IS_MOBILE
     galleryTrack.innerHTML = '';
     if (gallerySwiper) { gallerySwiper.destroy(true, true); gallerySwiper = null; }
 
-    // 预加载照片：只有加载成功的才加入轨道（不等全部加载完，直接显示）
-    gallerySection.classList.add('open');
-    initGallerySwiper();
+    let pending = 20;
+    const finish = () => {
+      pending--;
+      if (pending > 0) return;
+      gallerySection.classList.add('open');
+      initGallerySwiper();
+    };
     for (let n = 1; n <= 20; n++) {
       const idx = n;
       const probe = new Image();
@@ -252,8 +256,9 @@ const CDN = IS_MOBILE
         im.style.userSelect = 'none';
         slide.appendChild(im);
         galleryTrack.appendChild(slide);
+        finish();
       };
-      probe.onerror = () => {};
+      probe.onerror = finish;
       probe.src = `${CDN}photos/${place.id}/photo-${String(idx).padStart(2, '0')}.jpg`;
     }
   }
