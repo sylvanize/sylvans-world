@@ -6,47 +6,28 @@
   <title>haiku · sylvan's world</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/swiper-bundle.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { height: 100%; }
     body {
       background: #E1DEDB;
       color: #282828;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      overflow: hidden;
-      cursor: none;
       -webkit-font-smoothing: antialiased;
     }
-
-    /* ===== 自定义海豚光标 ===== */
-    .rm-cursor {
-      position: fixed; top: 0; left: 0;
-      width: 40px; height: 40px;
-      background: url('assets/cursor.png') no-repeat center / contain;
-      pointer-events: none;
-      z-index: 9999;
-      transform: translate(-12%, -12%);
-      transition: width .15s ease, height .15s ease;
-    }
-    .rm-cursor.click {
-      width: 52px; height: 52px;
-      background-image: url('assets/cursor-click.png');
-    }
+    ::selection { background: #282828; color: #E1DEDB; }
 
     /* ===== 顶部导航 ===== */
     .poem-nav {
-      position: fixed; top: 28px; left: 0; right: 0;
-      z-index: 50;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
       display: flex; justify-content: space-between; align-items: center;
-      padding: 0 48px;
+      padding: 24px 48px;
+      background: linear-gradient(to bottom, #E1DEDB 70%, transparent);
     }
     .poem-nav a {
       color: #282828; text-decoration: none;
       font-size: 15px; letter-spacing: .04em;
       opacity: .75; transition: opacity .2s;
-      cursor: none;
     }
     .poem-nav a:hover { opacity: 1; }
     .poem-nav .brand {
@@ -54,57 +35,108 @@
       font-style: italic; font-size: 22px; opacity: .85; letter-spacing: 0;
     }
 
-    /* ===== 翻页 swiper ===== */
-    .poems-swiper { width: 100%; height: 100vh; }
-    .poem-slide {
-      display: flex; align-items: center; justify-content: center;
-      padding: 0 14vw;
+    /* ===== 标题 ===== */
+    .poem-head {
+      padding: 110px 8vw 10px;
+      display: flex; align-items: baseline; justify-content: space-between;
     }
-    .poem-lines { text-align: center; max-width: 64vw; }
-    .poem-lines p {
-      font-size: clamp(22px, 2.3vw, 38px);
-      font-weight: 300;
-      line-height: 1.75;
-      letter-spacing: .05em;
-      margin: 0 0 .4em;
-      opacity: 0;
-      transform: translateY(16px);
-      transition: opacity .6s ease, transform .6s ease;
+    .poem-head h1 {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-weight: 400;
+      font-size: clamp(40px, 6vw, 72px);
+      letter-spacing: -0.02em;
     }
-    .poem-lines p:last-child { margin-bottom: 0; }
-    .swiper-slide-active .poem-lines p { opacity: 1; transform: none; }
-    .swiper-slide-active .poem-lines p:nth-child(1) { transition-delay: .05s; }
-    .swiper-slide-active .poem-lines p:nth-child(2) { transition-delay: .18s; }
-    .swiper-slide-active .poem-lines p:nth-child(3) { transition-delay: .31s; }
-    .poem-date {
-      margin-top: 1.6em;
-      font-size: 13px; letter-spacing: .2em;
-      opacity: 0; transition: opacity .6s ease .45s;
-      text-transform: uppercase;
-    }
-    .swiper-slide-active .poem-date { opacity: .5; }
+    .poem-head .count { font-size: 13px; letter-spacing: .2em; opacity: .5; text-transform: uppercase; }
 
-    /* ===== 底部：序号 + 箭头 ===== */
-    .poem-foot {
-      position: fixed; bottom: 30px; left: 0; right: 0;
-      z-index: 50;
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 0 48px;
-      font-size: 14px; opacity: .7;
+    /* ===== 俳句列表 ===== */
+    .poem-list {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px 8vw 80px;
     }
-    .poem-arrow {
+    .poem-card {
+      border-bottom: 1px solid rgba(40,40,40,.12);
+      padding: 26px 4px;
+      cursor: pointer;
+      transition: opacity .2s, transform .2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .poem-card:hover { opacity: .65; }
+    .poem-card:active { transform: scale(.995); }
+    .poem-card .lines {
+      font-size: clamp(16px, 2vw, 20px);
+      font-weight: 300;
+      line-height: 1.9;
+      letter-spacing: .04em;
+      white-space: pre-line;
+    }
+    .poem-card .date {
+      margin-top: 10px;
+      font-size: 12px; letter-spacing: .22em;
+      opacity: .45; text-transform: uppercase;
+    }
+
+    /* ===== 详情弹层 ===== */
+    .poem-overlay {
+      position: fixed; inset: 0; z-index: 100;
+      background: #E1DEDB;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 12vw;
+      opacity: 0; pointer-events: none;
+      transition: opacity .3s ease;
+    }
+    .poem-overlay.open { opacity: 1; pointer-events: auto; }
+    .poem-overlay .big-lines {
+      font-size: clamp(24px, 4vw, 44px);
+      font-weight: 300;
+      line-height: 2;
+      letter-spacing: .05em;
+      text-align: center;
+      white-space: pre-line;
+      animation: fadeUp .5s ease;
+    }
+    .poem-overlay .big-date {
+      margin-top: 2.2em;
+      font-size: 13px; letter-spacing: .25em;
+      opacity: .5; text-transform: uppercase;
+      animation: fadeUp .5s ease .12s both;
+    }
+    .poem-close {
+      position: fixed; top: 24px; right: 40px; z-index: 101;
       background: none; border: none;
-      font-size: 22px; color: #282828; opacity: .7;
-      cursor: none; padding: 6px 16px;
-      transition: opacity .2s;
+      font-size: 26px; color: #282828; opacity: .7;
+      cursor: pointer; padding: 8px;
     }
-    .poem-arrow:hover { opacity: 1; }
+    .poem-close:hover { opacity: 1; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    /* ===== 写俳句入口（右下角浮动） ===== */
+    .write-btn {
+      position: fixed; bottom: 28px; right: 28px; z-index: 60;
+      width: 56px; height: 56px; border-radius: 50%;
+      background: #282828; color: #E1DEDB;
+      border: none; font-size: 26px; font-weight: 300;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 6px 20px rgba(40,40,40,.25);
+      transition: transform .2s, opacity .2s;
+      text-decoration: none;
+    }
+    .write-btn:hover { transform: scale(1.08); }
+    .write-btn:active { transform: scale(.95); }
 
     @media (max-width: 768px) {
-      .poem-nav { padding: 0 20px; }
-      .poem-foot { padding: 0 20px; }
-      .poem-slide { padding: 0 8vw; }
-      .poem-lines { max-width: 84vw; }
+      .poem-nav { padding: 16px 20px; }
+      .poem-head { padding: 90px 6vw 0; }
+      .poem-list { padding: 10px 6vw 100px; }
+      .poem-card { padding: 20px 2px; }
+      .poem-overlay { padding: 16vw; }
+      .poem-close { right: 20px; }
+      .write-btn { bottom: 22px; right: 22px; width: 52px; height: 52px; }
     }
   </style>
 </head>
@@ -112,98 +144,29 @@
 
   <nav class="poem-nav">
     <a href="home.html" class="brand">sylvan</a>
-    <a href="home.html">← back</a>
+    <div style="display:flex;gap:1.5rem;">
+      <a href="notes.html">日常</a>
+      <a href="home.html">← back</a>
+    </div>
   </nav>
 
-  <div class="swiper poems-swiper">
-    <div class="swiper-wrapper" id="poemWrapper"></div>
+  <div class="poem-head">
+    <h1>haiku</h1>
+    <span class="count" id="poemCount">0 首</span>
   </div>
 
-  <div class="poem-foot">
-    <span id="poemCounter">1 / 10</span>
-    <div>
-      <button class="poem-arrow" id="poemPrev" aria-label="上一首">←</button>
-      <button class="poem-arrow" id="poemNext" aria-label="下一首">→</button>
-    </div>
+  <div class="poem-list" id="poemList"></div>
+
+  <!-- 详情弹层 -->
+  <div class="poem-overlay" id="poemOverlay">
+    <button class="poem-close" id="poemClose" aria-label="关闭">✕</button>
+    <div class="big-lines" id="bigLines"></div>
+    <div class="big-date" id="bigDate"></div>
   </div>
 
-  <div class="rm-cursor" id="rmCursor"></div>
+  <a class="write-btn" id="writeBtn" title="写俳句">＋</a>
 
   <script src="js/poems.js"></script>
-  <script src="js/swiper-bundle.min.js"></script>
-  <script>
-  (function () {
-    /* ---------- 渲染俳句 slide（数据全在 js/poems.js） ---------- */
-    var wrapper = document.getElementById('poemWrapper');
-    POEMS.forEach(function (p) {
-      var slide = document.createElement('div');
-      slide.className = 'swiper-slide poem-slide';
-      var html = '<div class="poem-lines">';
-      p.lines.forEach(function (line) { html += '<p>' + line + '</p>'; });
-      html += '</div>';
-      if (p.date) html += '<div class="poem-date">' + p.date + '</div>';
-      slide.innerHTML = html;
-      wrapper.appendChild(slide);
-    });
-
-    /* ---------- Swiper：横向翻页 ---------- */
-    var swiper = new Swiper('.poems-swiper', {
-      direction: 'horizontal',
-      slidesPerView: 1,
-      speed: 600,
-      allowTouchMove: true,
-      resistanceRatio: 0.85,
-      on: {
-        slideChange: function () {
-          document.getElementById('poemCounter').textContent =
-            (this.activeIndex + 1) + ' / ' + this.slides.length;
-        }
-      }
-    });
-
-    /* ---------- 箭头 / 键盘 ---------- */
-    document.getElementById('poemNext').addEventListener('click', function () { swiper.slideNext(); });
-    document.getElementById('poemPrev').addEventListener('click', function () { swiper.slidePrev(); });
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') swiper.slideNext();
-      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') swiper.slidePrev();
-    });
-
-    /* ---------- 滚轮 / 双指横滑：累积阈值翻一屏，翻后锁 600ms（跟相册同款手感） ---------- */
-    var wAcc = 0, wLock = false;
-    document.addEventListener('wheel', function (e) {
-      if (wLock) { wAcc = 0; return; }
-      var dx = Math.abs(e.deltaX), dy = Math.abs(e.deltaY);
-      var d = dx >= dy ? e.deltaX : e.deltaY;
-      wAcc += d;
-      if (Math.abs(wAcc) < 50) return;
-      var dir = wAcc > 0 ? 1 : -1;
-      wAcc = 0;
-      if (dir > 0) swiper.slideNext(); else swiper.slidePrev();
-      wLock = true;
-      setTimeout(function () { wLock = false; }, 600);
-    }, { passive: true });
-
-    /* ---------- 海豚光标跟随 ---------- */
-    var cur = document.getElementById('rmCursor');
-    var cx = -100, cy = -100, tx = -100, ty = -100, raf = null;
-    function loop() {
-      cx += (tx - cx) * 0.35; cy += (ty - cy) * 0.35;
-      cur.style.left = cx + 'px'; cur.style.top = cy + 'px';
-      raf = null;
-      if (Math.abs(tx - cx) > 0.5 || Math.abs(ty - cy) > 0.5) raf = requestAnimationFrame(loop);
-    }
-    document.addEventListener('mousemove', function (e) {
-      tx = e.clientX; ty = e.clientY;
-      if (!raf) raf = requestAnimationFrame(loop);
-    });
-    document.addEventListener('mouseover', function (e) {
-      if (e.target.closest('a, button')) cur.classList.add('click');
-    });
-    document.addEventListener('mouseout', function (e) {
-      if (e.target.closest('a, button')) cur.classList.remove('click');
-    });
-  })();
-  </script>
+  <script src="js/cursor.js"></script>
 </body>
 </html>

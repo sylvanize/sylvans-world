@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>diary · sylvan's world</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #E1DEDB;
+      color: #282828;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: #282828; color: #E1DEDB; }
+
+    .poem-nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 24px 48px;
+      background: linear-gradient(to bottom, #E1DEDB 70%, transparent);
+    }
+    .poem-nav a { color: #282828; text-decoration: none; font-size: 15px; letter-spacing: .04em; opacity: .75; }
+    .poem-nav a:hover { opacity: 1; }
+    .poem-nav .brand { font-family: 'Playfair Display', serif; font-style: italic; font-size: 22px; opacity: .85; }
+
+    .poem-head {
+      padding: 110px 8vw 10px;
+      display: flex; align-items: baseline; justify-content: space-between;
+    }
+    .poem-head h1 {
+      font-family: 'Playfair Display', serif;
+      font-style: italic; font-weight: 400;
+      font-size: clamp(40px, 6vw, 72px);
+      letter-spacing: -0.02em;
+    }
+    .poem-head .count { font-size: 13px; letter-spacing: .2em; opacity: .5; text-transform: uppercase; }
+
+    .poem-list { max-width: 900px; margin: 0 auto; padding: 20px 8vw 80px; }
+    .note-card {
+      border-bottom: 1px solid rgba(40,40,40,.12);
+      padding: 30px 4px;
+    }
+    .note-card .nt {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: clamp(20px, 2.6vw, 30px);
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+    .note-card .nb {
+      font-size: clamp(15px, 1.8vw, 18px);
+      font-weight: 300;
+      line-height: 2;
+      letter-spacing: .03em;
+      white-space: pre-line;
+    }
+    .note-card .imgs { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .note-card .imgs img {
+      width: 180px; height: 180px;
+      object-fit: cover; border-radius: 8px;
+      filter: grayscale(100%) contrast(1.05);
+      transition: filter .5s;
+    }
+    .note-card .imgs img:hover { filter: none; }
+    .note-card .date { margin-top: 12px; font-size: 12px; letter-spacing: .22em; opacity: .45; text-transform: uppercase; }
+
+    /* 图片点开大图 */
+    .lightbox {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(20,20,20,.9);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .25s;
+    }
+    .lightbox.open { opacity: 1; pointer-events: auto; }
+    .lightbox img { max-width: 92vw; max-height: 88vh; border-radius: 6px; }
+
+    .empty { text-align: center; padding: 80px 0; font-size: 15px; opacity: .4; font-weight: 300; }
+
+    @media (max-width: 768px) {
+      .poem-nav { padding: 16px 20px; }
+      .poem-head { padding: 90px 6vw 0; }
+      .poem-list { padding: 10px 6vw 100px; }
+      .note-card .imgs img { width: 130px; height: 130px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="poem-nav">
+    <a href="home.html" class="brand">sylvan</a>
+    <div style="display:flex;gap:1.5rem;">
+      <a href="poems.html">俳句</a>
+      <a href="home.html">← back</a>
+    </div>
+  </nav>
+
+  <div class="poem-head">
+    <h1>diary</h1>
+    <span class="count" id="noteCount">0 篇</span>
+  </div>
+
+  <div class="poem-list" id="noteList"></div>
+
+  <div class="lightbox" id="lightbox"><img id="lightboxImg" alt=""></div>
+
+  <script src="js/notes.js"></script>
+  <script src="js/cursor.js"></script>
+</body>
+</html>

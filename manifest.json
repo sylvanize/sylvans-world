@@ -1,0 +1,16 @@
+{
+  "name": "sylvan's 本子",
+  "short_name": "sylvan's 本子",
+  "description": "俳句 & 日常记录",
+  "start_url": "haiku-app.html",
+  "display": "standalone",
+  "background_color": "#E1DEDB",
+  "theme_color": "#E1DEDB",
+  "icons": [
+    {
+      "src": "assets/penguins/penguin0.png",
+      "sizes": "any",
+      "type": "image/png"
+    }
+  ]
+}

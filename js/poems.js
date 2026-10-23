@@ -1,55 +1,81 @@
 /* ============================================================
-   poems.js —— 俳句数据文件
-   以后更新句子/加新句，只改这个数组即可，页面无需动。
-
-   每首格式：
-   {
-     lines: ["第一行", "第二行", "第三行"],   // 三行俳句
-     date:  "2026.10",                        // 可选：写作日期
-     img:   "photos/xxx.jpg",                 // 可选：配图路径
-     note:  ""                                // 可选：备注
-   }
-   未填的可选字段直接留空或删掉该行。
+   poems.js —— 俳句列表 + 详情弹层
+   数据来源：js/poems.json（手机俳句本同步到这里）
+   手机端写俳句请用 haiku-app.html
    ============================================================ */
-const POEMS = [
-  {
-    lines: ["迷宫般的青茂口岸", "刺耳的脚步声", "好想就这样跳下去啊"],
-    date: ""
-  },
-  {
-    lines: ["翻阅了很多书本", "想要找到解答", "却从中学到了答案只能自己找的道理"],
-    date: ""
-  },
-  {
-    lines: ["教师严肃的讲话", "身边忙碌打字的人们", "谁在与我想着同样的事呢？"],
-    date: ""
-  },
-  {
-    lines: ["昏暗的街道", "在缝隙中行进的", "匆忙的人们啊"],
-    date: ""
-  },
-  {
-    lines: ["太阳光照进来", "一直叫嚷着的修路机器啊", "想吸烟的心情快要无法抑制了"],
-    date: ""
-  },
-  {
-    lines: ["听着空调的鸣叫", "躺在寂寥之夜的床铺上", "可恶的雅思啊"],
-    date: ""
-  },
-  {
-    lines: ["黑色的房间", "窗外滴答的雨声", "深秋夜晚寂寥的人啊"],
-    date: ""
-  },
-  {
-    lines: ["等待之夜的桌子上", "胡乱敲打键盘的", "做人工智能作业的女子啊啊！"],
-    date: ""
-  },
-  {
-    lines: ["空空的夜晚", "独自在秋风里我啊", "只剩下呼吸了"],
-    date: ""
-  },
-  {
-    lines: ["路边椅子上", "进入睡眠的老人们", "她们明天早上会做些什么呢"],
-    date: ""
+(function () {
+  'use strict';
+
+  var POEMS = [];
+
+  function render() {
+    var list = document.getElementById('poemList');
+    var count = document.getElementById('poemCount');
+    if (!list) return;
+
+    count.textContent = POEMS.length + ' 首';
+
+    POEMS.forEach(function (p, i) {
+      var card = document.createElement('div');
+      card.className = 'poem-card';
+      card.innerHTML =
+        '<div class="lines">' + p.lines.join('\n') + '</div>' +
+        (p.date ? '<div class="date">' + p.date + '</div>' : '');
+      card.addEventListener('click', function () { openDetail(i); });
+      list.appendChild(card);
+    });
   }
-];
+
+  /* ---------- 详情弹层 ---------- */
+  var overlay = document.getElementById('poemOverlay');
+  var bigLines = document.getElementById('bigLines');
+  var bigDate = document.getElementById('bigDate');
+
+  function openDetail(i) {
+    var p = POEMS[i];
+    if (!p) return;
+    bigLines.textContent = p.lines.join('\n');
+    bigDate.textContent = p.date || '';
+    overlay.classList.add('open');
+  }
+  function closeDetail() {
+    overlay.classList.remove('open');
+  }
+
+  if (overlay) {
+    document.getElementById('poemClose').addEventListener('click', closeDetail);
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) closeDetail();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeDetail();
+    });
+  }
+
+  /* ---------- 写俳句按钮：跳手机俳句本 ---------- */
+  var writeBtn = document.getElementById('writeBtn');
+  if (writeBtn) {
+    writeBtn.addEventListener('click', function () {
+      var isMobile = window.matchMedia('(max-width: 768px)').matches;
+      if (isMobile) {
+        location.href = 'haiku-app.html';
+      } else {
+        // 电脑端提示扫码/提示
+        writeBtn.textContent = '📱';
+        setTimeout(function () { writeBtn.textContent = '＋'; }, 1500);
+      }
+    });
+  }
+
+  /* ---------- 加载数据 ---------- */
+  fetch('js/poems.json?t=' + Date.now())
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      POEMS = Array.isArray(data) ? data : [];
+      render();
+    })
+    .catch(function () {
+      POEMS = [];
+      render();
+    });
+})();

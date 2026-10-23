@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#E1DEDB">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="assets/penguins/penguin0.png">
+  <title>sylvan's 本子 · 俳句 & 日常</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      background: #E1DEDB;
+      color: #282828;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+    ::selection { background: #282828; color: #E1DEDB; }
+
+    /* ===== 顶栏 ===== */
+    .app-nav {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 20px 22px 8px;
+    }
+    .app-nav .brand { font-family: 'Playfair Display', serif; font-style: italic; font-size: 21px; opacity: .85; }
+    .app-nav a { color: #282828; text-decoration: none; font-size: 14px; opacity: .7; }
+    .app-nav a:hover { opacity: 1; }
+
+    /* ===== Tab ===== */
+    .tabs {
+      display: flex; gap: 4px;
+      margin: 12px 22px;
+      background: rgba(40,40,40,.06);
+      border-radius: 999px;
+      padding: 4px;
+    }
+    .tab {
+      flex: 1;
+      border: none; background: none;
+      padding: 11px 0;
+      border-radius: 999px;
+      font-size: 15px; letter-spacing: .12em;
+      color: rgba(40,40,40,.55);
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .tab.on { background: #282828; color: #E1DEDB; }
+
+    /* ===== 面板 ===== */
+    .panel { display: none; }
+    .panel.on { display: block; }
+
+    /* ===== 写作卡片 ===== */
+    .compose {
+      margin: 10px 22px;
+      background: #fff;
+      border-radius: 14px;
+      padding: 20px 18px;
+      box-shadow: 0 4px 24px rgba(40,40,40,.08);
+    }
+    .compose h2 {
+      font-size: 14px; font-weight: 500; letter-spacing: .18em;
+      text-transform: uppercase; opacity: .55; margin-bottom: 14px;
+    }
+    .compose textarea, .compose input[type=text] {
+      width: 100%;
+      border: none; outline: none; resize: none;
+      background: transparent;
+      font-family: 'Inter', sans-serif;
+      font-size: 17px; font-weight: 300; line-height: 1.7;
+      color: #282828;
+      padding: 6px 0;
+    }
+    .compose input[type=text] { font-size: 20px; font-weight: 500; letter-spacing: .02em; }
+    .compose textarea + textarea, .compose textarea + input, .compose input + textarea { border-top: 1px solid rgba(40,40,40,.08); }
+    .compose textarea::placeholder, .compose input::placeholder { color: rgba(40,40,40,.3); }
+    .save-row { display: flex; justify-content: flex-end; margin-top: 10px; }
+    .save-btn {
+      background: #282828; color: #E1DEDB;
+      border: none; border-radius: 999px;
+      padding: 12px 26px;
+      font-size: 15px; letter-spacing: .08em;
+      cursor: pointer;
+      transition: opacity .2s, transform .15s;
+    }
+    .save-btn:active { transform: scale(.95); }
+    .save-btn:disabled { opacity: .35; }
+
+    /* ===== 图片选择 ===== */
+    .img-row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+    .img-box { position: relative; width: 90px; height: 90px; border-radius: 10px; overflow: hidden; background: rgba(40,40,40,.05); }
+    .img-box img { width: 100%; height: 100%; object-fit: cover; }
+    .img-box .rm {
+      position: absolute; top: 4px; right: 4px;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: rgba(40,40,40,.75); color: #fff;
+      border: none; font-size: 13px; line-height: 1;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .img-add {
+      width: 90px; height: 90px; border-radius: 10px;
+      border: 1.5px dashed rgba(40,40,40,.3);
+      background: none; color: rgba(40,40,40,.45);
+      font-size: 30px; font-weight: 300; cursor: pointer;
+    }
+
+    /* ===== 列表 ===== */
+    .my-list { padding: 18px 22px 40px; }
+    .my-list h3 {
+      font-size: 13px; font-weight: 500; letter-spacing: .2em;
+      text-transform: uppercase; opacity: .5;
+      margin-bottom: 8px;
+    }
+    .haiku-item, .note-item {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 14px rgba(40,40,40,.05);
+    }
+    .haiku-item .txt { font-size: 16px; font-weight: 300; line-height: 1.8; white-space: pre-line; }
+    .note-item .nt { font-size: 17px; font-weight: 500; margin-bottom: 6px; }
+    .note-item .nb { font-size: 14px; font-weight: 300; line-height: 1.7; white-space: pre-line; opacity: .85; }
+    .note-item .thumbs { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+    .note-item .thumbs img { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; }
+    .haiku-item .meta, .note-item .meta {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 10px;
+      font-size: 12px; letter-spacing: .1em;
+    }
+    .haiku-item .date, .note-item .date { opacity: .45; text-transform: uppercase; }
+    .haiku-item .status, .note-item .status { font-size: 11px; letter-spacing: .12em; }
+    .status.synced { color: #4a7c59; }
+    .status.pending { color: #b5813a; }
+    .copy {
+      background: none; border: 1px solid rgba(40,40,40,.2);
+      border-radius: 999px;
+      font-size: 11px; letter-spacing: .1em;
+      color: rgba(40,40,40,.55);
+      cursor: pointer; padding: 3px 10px; margin-right: 6px;
+    }
+    .copy:active { opacity: .6; }
+    .del {
+      background: none; border: none;
+      font-size: 15px; color: rgba(40,40,40,.35);
+      cursor: pointer; padding: 2px 6px;
+    }
+
+    /* ===== 底部操作条 ===== */
+    .bottom-bar {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+      display: flex; gap: 10px;
+      padding: 12px 22px calc(14px + env(safe-area-inset-bottom));
+      background: rgba(225,222,219,.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .sync-btn {
+      flex: 1;
+      background: #282828; color: #E1DEDB;
+      border: none; border-radius: 999px;
+      padding: 14px 0;
+      font-size: 15px; letter-spacing: .1em;
+      cursor: pointer;
+      transition: opacity .2s, transform .15s;
+    }
+    .sync-btn:active { transform: scale(.97); }
+    .sync-btn:disabled { opacity: .4; }
+    .set-btn {
+      background: none; border: 1px solid rgba(40,40,40,.3);
+      border-radius: 999px; color: #282828;
+      padding: 0 20px; font-size: 14px; cursor: pointer;
+    }
+
+    /* ===== 设置面板 ===== */
+    .sheet {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(40,40,40,.4);
+      display: flex; align-items: flex-end;
+      opacity: 0; pointer-events: none; transition: opacity .25s;
+    }
+    .sheet.open { opacity: 1; pointer-events: auto; }
+    .sheet .sheet-panel {
+      width: 100%;
+      background: #E1DEDB;
+      border-radius: 20px 20px 0 0;
+      padding: 24px 22px calc(20px + env(safe-area-inset-bottom));
+      transform: translateY(30px); transition: transform .25s;
+      max-height: 85vh; overflow-y: auto;
+    }
+    .sheet.open .sheet-panel { transform: none; }
+    .sheet h3 { font-size: 15px; font-weight: 500; margin-bottom: 14px; }
+    .sheet p { font-size: 13px; line-height: 1.7; opacity: .65; margin-bottom: 14px; }
+    .sheet .step { font-size: 13px; opacity: .8; line-height: 1.9; margin-bottom: 14px; }
+    .sheet .step b { font-weight: 600; }
+    .sheet label { display: block; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; opacity: .5; margin: 8px 0 6px; }
+    .sheet input[type=password], .sheet input[type=text] {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1px solid rgba(40,40,40,.25);
+      border-radius: 10px;
+      background: #fff; color: #282828;
+      font-size: 14px; outline: none;
+      margin-bottom: 12px;
+    }
+    .sheet .ok-btn {
+      width: 100%;
+      background: #282828; color: #E1DEDB;
+      border: none; border-radius: 999px;
+      padding: 13px 0; font-size: 15px; cursor: pointer;
+      margin-top: 4px;
+    }
+    .sheet .cancel {
+      width: 100%; text-align: center;
+      background: none; border: none;
+      color: rgba(40,40,40,.5);
+      font-size: 14px; padding: 12px 0 4px; cursor: pointer;
+    }
+
+    /* ===== toast ===== */
+    .toast {
+      position: fixed; left: 50%; bottom: 110px;
+      transform: translateX(-50%) translateY(10px);
+      background: #282828; color: #E1DEDB;
+      padding: 10px 22px; border-radius: 999px;
+      font-size: 14px; letter-spacing: .04em;
+      opacity: 0; transition: opacity .25s, transform .25s;
+      z-index: 200; pointer-events: none; text-align: center; white-space: nowrap; max-width: 86vw;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%); }
+
+    .empty { text-align: center; padding: 40px 0; font-size: 14px; opacity: .4; font-weight: 300; }
+  </style>
+</head>
+<body>
+
+  <nav class="app-nav">
+    <span class="brand">sylvan's 本子</span>
+    <div style="display:flex;gap:14px;">
+      <a href="poems.html">俳句集</a>
+      <a href="notes.html">日常</a>
+    </div>
+  </nav>
+
+  <!-- Tab 切换 -->
+  <div class="tabs">
+    <button class="tab on" id="tabHaiku" data-tab="haiku">俳句</button>
+    <button class="tab" id="tabNote" data-tab="note">日常</button>
+  </div>
+
+  <!-- ===== 俳句面板 ===== -->
+  <div class="panel on" id="panel-haiku">
+    <div class="compose">
+      <h2>记一首俳句</h2>
+      <textarea id="l1" rows="1" placeholder="第一行"></textarea>
+      <textarea id="l2" rows="1" placeholder="第二行"></textarea>
+      <textarea id="l3" rows="1" placeholder="第三行"></textarea>
+      <div class="save-row">
+        <button class="save-btn" id="saveHaikuBtn">存进俳句本</button>
+      </div>
+    </div>
+    <div class="my-list">
+      <h3>我的俳句</h3>
+      <div id="haikuList"></div>
+    </div>
+  </div>
+
+  <!-- ===== 日常面板 ===== -->
+  <div class="panel" id="panel-note">
+    <div class="compose">
+      <h2>记一段日常</h2>
+      <input type="text" id="nTitle" placeholder="标题（可留空）">
+      <textarea id="nBody" rows="6" placeholder="写点什么…"></textarea>
+      <div class="img-row" id="imgRow">
+        <button class="img-add" id="imgAdd">＋</button>
+      </div>
+      <div class="save-row">
+        <button class="save-btn" id="saveNoteBtn">存进日记</button>
+      </div>
+    </div>
+    <div class="my-list">
+      <h3>我的日记</h3>
+      <div id="noteList"></div>
+    </div>
+  </div>
+
+  <!-- 底部操作 -->
+  <div class="bottom-bar">
+    <button class="sync-btn" id="syncBtn">同步到网站</button>
+    <button class="set-btn" id="setBtn">设置</button>
+  </div>
+
+  <!-- 设置面板 -->
+  <div class="sheet" id="sheet">
+    <div class="sheet-panel">
+      <h3>设置</h3>
+      <p>配一次就行，之后自动同步。</p>
+      <label>GitHub 密钥（必填）</label>
+      <div class="step">
+        1. 手机浏览器打开<br><b>https://github.com/settings/tokens?type=beta</b><br>
+        2. Generate new token → Repository access 选 <b>Only select repositories</b> → 选 <b>sylvans-world</b><br>
+        3. Permissions → Contents 选 <b>Read and write</b><br>
+        4. 生成后把 token 粘到下面
+      </div>
+      <input type="password" id="tokenInput" placeholder="github_pat_...">
+      <label>Cloudinary 上传密钥（传图片用，可选）</label>
+      <div class="step">
+        不填的话，图片只存在手机本地，文字照常同步。<br>
+        要同步图片：Cloudinary 控制台 → Settings → Upload → Upload presets → <b>Add unsigned preset</b>，把 preset 名字和 Cloud name 填下面。
+      </div>
+      <input type="text" id="cloudNameInput" placeholder="cloud name（如 jwjttap0）">
+      <input type="text" id="presetInput" placeholder="unsigned preset 名">
+      <button class="ok-btn" id="tokenOk">保存</button>
+      <button class="cancel" id="tokenCancel">取消</button>
+    </div>
+  </div>
+
+  <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
+
+  <div class="toast" id="toast"></div>
+
+  <script src="js/haiku-app.js"></script>
+</body>
+</html>
