@@ -1,8 +1,8 @@
 /* ============================================================
-   haiku-app.js —— 手机俳句本 & 日常本
-   - 本地记录（localStorage，离线可用）
-   - 一键同步：俳句 → js/poems.json，日常 → js/notes.json
-   - 图片：压缩后本地存；配置 Cloudinary 后可随日记同步
+   haiku-app.js —— sylvan's 本子（俳句 + 备忘录，单 App 双页面）
+   - 俳句 → localStorage 'sylvan_haikus' → 同步 js/poems.json
+   - 日记 → localStorage 'sylvan_notes'  → 同步 js/notes.json
+   - 列表 / 搜索 / 新建 / 编辑 / 删除 / 一键同步 / 图片
    ============================================================ */
 (function () {
   'use strict';
@@ -10,8 +10,10 @@
   var REPO = 'sylvans-world';
   var OWNER = 'sylvanize';
   var GH = 'https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/';
+  var POEMS_PATH = 'js/poems.json';
+  var NOTES_PATH = 'js/notes.json';
+  var MOODS_PATH = 'js/moods.json';
 
-  /* ---------- 本地存储 ---------- */
   function lsGet(key, def) {
     try { return JSON.parse(localStorage.getItem(key)) || def; } catch (e) { return def; }
   }
@@ -21,13 +23,16 @@
 
   var haikus = lsGet('sylvan_haikus', []);
   var notes = lsGet('sylvan_notes', []);
+  var moods = lsGet('sylvan_moods', []);
   var token = localStorage.getItem('sylvan_token') || '';
   var cloudName = localStorage.getItem('sylvan_cloud') || '';
   var preset = localStorage.getItem('sylvan_preset') || '';
 
   var $ = function (id) { return document.getElementById(id); };
 
-  /* ---------- 工具 ---------- */
+  var MOOD_TEXT = { happy: 'good', sad: '这都是傻瓜的血脉使然呀！' };
+  var MOOD_LABEL = { happy: '开心', sad: '悲伤' };
+
   function today() {
     var d = new Date();
     return d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0');
@@ -35,135 +40,355 @@
   function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   }
-  function toast(msg, ms) {
+  function toast(msg) {
     var t = $('toast');
     t.textContent = msg;
     t.classList.add('show');
     clearTimeout(toast._t);
-    toast._t = setTimeout(function () { t.classList.remove('show'); }, ms || 1800);
+    toast._t = setTimeout(function () { t.classList.remove('show'); }, 1800);
   }
 
   /* ============================================================
-     ① Tab 切换
+     Tab 切换
      ============================================================ */
-  var tabs = document.querySelectorAll('.tab');
-  tabs.forEach(function (tab) {
-    tab.addEventListener('click', function () {
-      tabs.forEach(function (t) { t.classList.remove('on'); });
-      tab.classList.add('on');
-      document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('on'); });
-      $('panel-' + tab.dataset.tab).classList.add('on');
+  var currentTab = 'haiku';
+
+  function switchTab(tab) {
+    currentTab = tab;
+    $('tabHaiku').classList.toggle('on', tab === 'haiku');
+    $('tabNote').classList.toggle('on', tab === 'note');
+    $('tabMood').classList.toggle('on', tab === 'mood');
+    $('panel-haiku').hidden = tab !== 'haiku';
+    $('panel-note').hidden = tab !== 'note';
+    $('panel-mood').hidden = tab !== 'mood';
+    $('fab').style.display = tab === 'mood' ? 'none' : 'flex';   // 心情页用自带按钮
+    $('search').style.display = tab === 'mood' ? 'none' : 'block'; // 心情页不搜索
+    $('search').value = '';
+    renderCurrent();
+  }
+  $('tabHaiku').addEventListener('click', function () { switchTab('haiku'); });
+  $('tabNote').addEventListener('click', function () { switchTab('note'); });
+  $('tabMood').addEventListener('click', function () { switchTab('mood'); });
+
+  function renderCurrent() {
+    if (currentTab === 'haiku') renderHaikuList();
+    else if (currentTab === 'note') renderNoteList();
+    else renderMood();
+  }
+  $('search').addEventListener('input', renderCurrent);
+
+  /* ============================================================
+     俳句列表
+     ============================================================ */
+  function renderHaikuList() {
+    var q = ($('search').value || '').trim().toLowerCase();
+    var list = $('panel-haiku');
+    var shown = haikus.filter(function (h) {
+      if (!q) return true;
+      return (h.lines || []).join(' ').toLowerCase().indexOf(q) >= 0;
     });
-  });
+    $('count').textContent = haikus.length + ' 首';
 
-  /* ============================================================
-     ①½ 草稿自动保存（写一半退出不丢）
-     ============================================================ */
-  var draftTimer = null;
-  function saveDraft() {
-    clearTimeout(draftTimer);
-    draftTimer = setTimeout(function () {
-      try {
-        localStorage.setItem('sylvan_draft', JSON.stringify({
-          l1: $('l1').value, l2: $('l2').value, l3: $('l3').value,
-          t: $('nTitle').value, b: $('nBody').value
-        }));
-      } catch (e) {}
-    }, 400);
-  }
-  ['l1', 'l2', 'l3', 'nTitle', 'nBody'].forEach(function (id) {
-    $(id).addEventListener('input', saveDraft);
-  });
-  function restoreDraft() {
-    try {
-      var d = JSON.parse(localStorage.getItem('sylvan_draft') || 'null');
-      if (!d) return;
-      $('l1').value = d.l1 || ''; $('l2').value = d.l2 || ''; $('l3').value = d.l3 || '';
-      $('nTitle').value = d.t || ''; $('nBody').value = d.b || '';
-    } catch (e) {}
-  }
-  function clearDraft() {
-    try { localStorage.removeItem('sylvan_draft'); } catch (e) {}
-  }
-
-  /* ============================================================
-     ①¾ 复制到剪贴板（发微信/朋友圈方便）
-     ============================================================ */
-  function copyText(text) {
-    function done() { toast('已复制'); }
-    function fallback() {
-      var ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed'; ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      try { document.execCommand('copy'); done(); } catch (e) {}
-      document.body.removeChild(ta);
+    if (!shown.length) {
+      list.innerHTML = '<div class="empty">' + (haikus.length ? '没有匹配的结果' : '还没有俳句，点右下角 ＋ 写一首') + '</div>';
+      return;
     }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(done).catch(fallback);
-    } else fallback();
+    list.innerHTML = '';
+    shown.forEach(function (h) {
+      var lines = h.lines || [];
+      var el = document.createElement('div');
+      el.className = 'card';
+      el.dataset.id = h.id;
+      el.innerHTML =
+        (lines[0] ? '<div class="ct">' + lines[0] + '</div>' : '') +
+        '<div class="cb">' + lines.join('\n') + '</div>' +
+        '<div class="meta"><span>' + (h.date || '') + '</span>' +
+        '<span class="status ' + (h.synced ? 'synced' : 'pending') + '">' + (h.synced ? '已同步' : '待同步') + '</span></div>';
+      list.appendChild(el);
+    });
+    bindCards(list, haikus, openHaikuEditor);
   }
 
   /* ============================================================
-     ② 俳句：保存 + 列表
+     日记列表
      ============================================================ */
-  $('saveHaikuBtn').addEventListener('click', function () {
-    var l1 = $('l1').value.trim();
-    var l2 = $('l2').value.trim();
-    var l3 = $('l3').value.trim();
-    if (!l1 && !l2 && !l3) { toast('写点什么吧'); return; }
-    haikus.unshift({
-      id: uid(),
-      lines: [l1, l2, l3].filter(function (x) { return x; }),
-      date: today(),
+  function renderNoteList() {
+    var q = ($('search').value || '').trim().toLowerCase();
+    var list = $('panel-note');
+    var shown = notes.filter(function (n) {
+      if (!q) return true;
+      return ((n.title || '') + ' ' + (n.body || '')).toLowerCase().indexOf(q) >= 0;
+    });
+    $('count').textContent = notes.length + ' 条';
+
+    if (!shown.length) {
+      list.innerHTML = '<div class="empty">' + (notes.length ? '没有匹配的结果' : '还没有日记，点右下角 ＋ 开始记录') + '</div>';
+      return;
+    }
+    list.innerHTML = '';
+    shown.forEach(function (n) {
+      var thumbs = '';
+      if (n.images && n.images.length) {
+        thumbs = '<div class="thumbs">' + n.images.slice(0, 3).map(function (im) {
+          return '<img src="' + im + '">';
+        }).join('') + '</div>';
+      }
+      var el = document.createElement('div');
+      el.className = 'card';
+      el.dataset.id = n.id;
+      el.innerHTML =
+        (n.title ? '<div class="ct">' + n.title + '</div>' : '') +
+        (n.body ? '<div class="cb">' + n.body + '</div>' : '') +
+        thumbs +
+        '<div class="meta"><span>' + (n.date || '') + '</span>' +
+        '<span class="status ' + (n.synced ? 'synced' : 'pending') + '">' + (n.synced ? '已同步' : '待同步') + '</span></div>';
+      list.appendChild(el);
+    });
+    bindCards(list, notes, openNoteEditor);
+  }
+
+  function bindCards(list, arr, opener) {
+    list.querySelectorAll('.card').forEach(function (c) {
+      c.addEventListener('click', function () {
+        for (var i = 0; i < arr.length; i++) if (arr[i].id === c.dataset.id) { opener(arr[i]); return; }
+      });
+    });
+  }
+
+  /* ============================================================
+     心情页：当前心情 + 一键记录 + 历史 + 本周统计
+     ============================================================ */
+  function dateStr(d) {
+    return d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function renderMood() {
+    var now = $('moodNow');
+    if (moods.length) {
+      now.textContent = moods[0].text;
+      now.classList.remove('empty');
+    } else {
+      now.textContent = '此刻，什么都没有';
+      now.classList.add('empty');
+    }
+
+    // 本周统计（近 7 天）
+    var week = new Date(Date.now() - 6 * 86400000);
+    var weekStart = dateStr(week);
+    var h = 0, s = 0;
+    moods.forEach(function (m) {
+      if ((m.date || '') >= weekStart) { if (m.type === 'happy') h++; else s++; }
+    });
+    $('moodStat').textContent = (moods.length ? '这周 开心 ×' + h + ' · 悲伤 ×' + s : '');
+
+    // 历史：按今天 / 昨天 / 更早分组
+    var todayS = dateStr(new Date());
+    var yesterdayS = dateStr(new Date(Date.now() - 86400000));
+    var groups = [
+      { label: '今天', items: [] },
+      { label: '昨天', items: [] },
+      { label: '更早', items: [] }
+    ];
+    moods.forEach(function (m) {
+      if (m.date === todayS) groups[0].items.push(m);
+      else if (m.date === yesterdayS) groups[1].items.push(m);
+      else groups[2].items.push(m);
+    });
+
+    var wrap = $('moodGroups');
+    wrap.innerHTML = '';
+    groups.forEach(function (g) {
+      if (!g.items.length) return;
+      var title = document.createElement('div');
+      title.className = 'mood-group-title';
+      title.textContent = g.label;
+      wrap.appendChild(title);
+      g.items.forEach(function (m) {
+        var el = document.createElement('div');
+        el.className = 'card mood-card';
+        el.dataset.id = m.id;
+        el.innerHTML =
+          '<div class="face ' + m.type + '">' + MOOD_LABEL[m.type] + '</div>' +
+          '<div class="mood-line"><div class="mt2">' + m.text + '</div>' +
+          (m.note ? '<div class="mn">' + m.note + '</div>' : '') + '</div>' +
+          '<div class="meta">' + m.time + ' <span class="status ' + (m.synced ? 'synced' : 'pending') + '">' + (m.synced ? '已同步' : '待同步') + '</span></div>';
+        wrap.appendChild(el);
+      });
+    });
+    wrap.querySelectorAll('.mood-card').forEach(function (c) {
+      c.addEventListener('click', function () {
+        for (var i = 0; i < moods.length; i++) if (moods[i].id === c.dataset.id) { openMoodEditor(moods[i]); return; }
+      });
+    });
+
+    /* 狸猫彩蛋：累计每 7 次悲伤召唤一只 */
+    var sadCount = 0;
+    moods.forEach(function (m) { if (m.type === 'sad') sadCount++; });
+    var tanukis = Math.floor(sadCount / 7);
+    var zone = $('tanukiZone');
+    if (tanukis > 0) {
+      $('tanukiFace').textContent = '🦝'.repeat(Math.min(tanukis, 5));
+      $('tanukiLine').textContent = '狸猫 ×' + tanukis + '——集齐七个不开心，它就来陪你';
+      var left = 7 - (sadCount % 7);
+      $('tanukiSub').textContent = left < 7 ? '还差 ' + left + ' 个不开心，召唤下一只' : '';
+      zone.hidden = false;
+    } else {
+      zone.hidden = true;
+    }
+  }
+
+  function addMood(type) {
+    var now = new Date();
+    moods.unshift({
+      id: uid(), type: type, text: MOOD_TEXT[type], note: '',
+      date: dateStr(now),
+      time: String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'),
       synced: false
     });
-    lsSet('sylvan_haikus', haikus);
-    $('l1').value = $('l2').value = $('l3').value = '';
-    clearDraft();
-    renderHaikus();
-    toast('存好了');
-  });
+    lsSet('sylvan_moods', moods);
+    renderMood();
+    toast(type === 'happy' ? '记下了：good' : '记下了：傻瓜血脉');
+  }
+  $('moodHappy').addEventListener('click', function () { addMood('happy'); });
+  $('moodSad').addEventListener('click', function () { addMood('sad'); });
 
-  function renderHaikus() {
-    var box = $('haikuList');
-    if (!haikus.length) { box.innerHTML = '<div class="empty">还没有东西，写一首吧</div>'; return; }
-    box.innerHTML = '';
-    document.querySelector('#panel-haiku h3').textContent = '我的俳句 (' + haikus.length + ')';
-    haikus.forEach(function (h) {
-      var el = document.createElement('div');
-      el.className = 'haiku-item';
-      el.innerHTML =
-        '<div class="txt">' + h.lines.join('\n') + '</div>' +
-        '<div class="meta"><span class="date">' + h.date + '</span>' +
-        '<span><button class="copy">复制</button>' +
-        '<span class="status ' + (h.synced ? 'synced' : 'pending') + '">' + (h.synced ? '已同步' : '待同步') + '</span>' +
-        '<button class="del" data-id="' + h.id + '">✕</button></span></div>';
-      box.appendChild(el);
-    });
-    box.querySelectorAll('.del').forEach(function (b) {
-      b.addEventListener('click', function () {
-        if (!confirm('确定删除这首俳句吗？')) return;
-        haikus = haikus.filter(function (h) { return h.id !== b.dataset.id; });
-        lsSet('sylvan_haikus', haikus);
-        renderHaikus();
-      });
-    });
-    box.querySelectorAll('.copy').forEach(function (b) {
-      b.addEventListener('click', function () {
-        var idx = Array.prototype.indexOf.call(box.querySelectorAll('.copy'), b);
-        copyText(haikus[idx].lines.join('\n') + '\n—— ' + haikus[idx].date);
-      });
-    });
+  function openMoodEditor(m) {
+    editingKind = 'mood';
+    editingId = m.id;
+    $('moodEditType').textContent = MOOD_LABEL[m.type];
+    $('moodEditText').textContent = m.text;
+    $('moodNote').value = m.note || '';
+    $('editDel').style.visibility = 'visible';
+    showGroup('mood');
+    $('editor').classList.add('open');
+    setTimeout(function () { $('moodNote').focus(); }, 300);
   }
 
   /* ============================================================
-     ③ 日常：图片选择/压缩 + 保存 + 列表
+     编辑器：新建 / 编辑（俳句三行 / 日记标题+正文+图片）
      ============================================================ */
-  var pendingImages = [];   // 本次写作待存的图（dataURL）
+  var editingKind = null;   // 'haiku' | 'note' | null
+  var editingId = null;
+  var pendingImages = [];
 
-  $('imgAdd').addEventListener('click', function () { $('fileInput').click(); });
+  function showGroup(kind) {
+    $('group-haiku').hidden = kind !== 'haiku';
+    $('group-note').hidden = kind !== 'note';
+    $('group-mood').hidden = kind !== 'mood';
+  }
+
+  function openHaikuEditor(h) {
+    editingKind = 'haiku';
+    editingId = h ? h.id : null;
+    var lines = h && h.lines ? h.lines : ['', '', ''];
+    $('l1').value = lines[0] || '';
+    $('l2').value = lines[1] || '';
+    $('l3').value = lines[2] || '';
+    $('editDel').style.visibility = h ? 'visible' : 'hidden';
+    showGroup('haiku');
+    $('editor').classList.add('open');
+    setTimeout(function () { (h ? $('l2') : $('l1')).focus(); }, 300);
+  }
+
+  function openNoteEditor(n) {
+    editingKind = 'note';
+    editingId = n ? n.id : null;
+    pendingImages = n && n.images ? n.images.slice() : [];
+    $('mTitle').value = n ? (n.title || '') : '';
+    $('mBody').value = n ? (n.body || '') : '';
+    $('editDel').style.visibility = n ? 'visible' : 'hidden';
+    renderImgs();
+    showGroup('note');
+    $('editor').classList.add('open');
+    setTimeout(function () { (n ? $('mBody') : $('mTitle')).focus(); }, 300);
+  }
+
+  function closeEditor() {
+    $('editor').classList.remove('open');
+    editingKind = null;
+    editingId = null;
+  }
+  $('cancelBtn').addEventListener('click', closeEditor);
+
+  $('doneBtn').addEventListener('click', function () {
+    if (editingKind === 'haiku') {
+      var l1 = $('l1').value.trim(), l2 = $('l2').value.trim(), l3 = $('l3').value.trim();
+      if (!l1 && !l2 && !l3) { toast('写点什么吧'); return; }
+      if (editingId) {
+        for (var i = 0; i < haikus.length; i++) if (haikus[i].id === editingId) {
+          haikus[i].lines = [l1, l2, l3].filter(function (x) { return x; });
+          haikus[i].synced = false;
+          break;
+        }
+      } else {
+        haikus.unshift({
+          id: uid(),
+          lines: [l1, l2, l3].filter(function (x) { return x; }),
+          date: today(), synced: false
+        });
+      }
+      lsSet('sylvan_haikus', haikus);
+    } else if (editingKind === 'note') {
+      var title = $('mTitle').value.trim();
+      var body = $('mBody').value.trim();
+      if (!title && !body && !pendingImages.length) { toast('写点什么吧'); return; }
+      if (editingId) {
+        for (var j = 0; j < notes.length; j++) if (notes[j].id === editingId) {
+          notes[j].title = title; notes[j].body = body; notes[j].images = pendingImages.slice();
+          notes[j].synced = false;
+          break;
+        }
+      } else {
+        notes.unshift({
+          id: uid(), title: title, body: body,
+          images: pendingImages.slice(),
+          date: today(), synced: false
+        });
+      }
+      lsSet('sylvan_notes', notes);
+    } else if (editingKind === 'mood') {
+      var moodNote = $('moodNote').value.trim();
+      for (var k = 0; k < moods.length; k++) if (moods[k].id === editingId) {
+        moods[k].note = moodNote;
+        moods[k].synced = false;
+        break;
+      }
+      lsSet('sylvan_moods', moods);
+    } else {
+      return;
+    }
+    closeEditor();
+    renderCurrent();
+    toast('已保存');
+  });
+
+  $('editDel').addEventListener('click', function () {
+    if (!editingKind || !editingId) return;
+    if (!confirm('确定删除吗？')) return;
+    if (editingKind === 'haiku') {
+      haikus = haikus.filter(function (x) { return x.id !== editingId; });
+      lsSet('sylvan_haikus', haikus);
+    } else if (editingKind === 'note') {
+      notes = notes.filter(function (x) { return x.id !== editingId; });
+      lsSet('sylvan_notes', notes);
+    } else if (editingKind === 'mood') {
+      moods = moods.filter(function (x) { return x.id !== editingId; });
+      lsSet('sylvan_moods', moods);
+    }
+    closeEditor();
+    renderCurrent();
+    toast('已删除');
+  });
+
+  $('fab').addEventListener('click', function () {
+    if (currentTab === 'haiku') openHaikuEditor(null);
+    else openNoteEditor(null);
+  });
+
+  /* ============================================================
+     图片（日记用）：压缩 1200px / JPEG 0.75，最多 2 张
+     ============================================================ */
+  $('mAdd') && ($('mAdd').addEventListener('click', function () { $('fileInput').click(); }));
   $('fileInput').addEventListener('change', function () {
     var files = Array.prototype.slice.call($('fileInput').files || []);
     files.forEach(function (file) {
@@ -172,7 +397,7 @@
       reader.onload = function (e) {
         compressImage(e.target.result, function (dataUrl) {
           pendingImages.push(dataUrl);
-          renderImgRow();
+          renderImgs();
         });
       };
       reader.readAsDataURL(file);
@@ -198,94 +423,32 @@
     img.src = dataUrl;
   }
 
-  function renderImgRow() {
-    var row = $('imgRow');
-    row.innerHTML = '';
+  function renderImgs() {
+    var box = $('mImgs');
+    box.innerHTML = '';
     pendingImages.forEach(function (d, i) {
-      var box = document.createElement('div');
-      box.className = 'img-box';
-      box.innerHTML = '<img src="' + d + '"><button class="rm" data-i="' + i + '">✕</button>';
-      row.appendChild(box);
+      var w = document.createElement('div');
+      w.className = 'box';
+      w.innerHTML = '<img src="' + d + '"><button class="rm" data-i="' + i + '">✕</button>';
+      box.appendChild(w);
     });
     if (pendingImages.length < 2) {
-      var add = document.createElement('button');
-      add.className = 'img-add';
-      add.textContent = '＋';
-      add.addEventListener('click', function () { $('fileInput').click(); });
-      row.appendChild(add);
+      var a = document.createElement('button');
+      a.className = 'add';
+      a.textContent = '＋';
+      a.addEventListener('click', function () { $('fileInput').click(); });
+      box.appendChild(a);
     }
-    row.querySelectorAll('.rm').forEach(function (b) {
+    box.querySelectorAll('.rm').forEach(function (b) {
       b.addEventListener('click', function () {
         pendingImages.splice(parseInt(b.dataset.i, 10), 1);
-        renderImgRow();
-      });
-    });
-  }
-
-  $('saveNoteBtn').addEventListener('click', function () {
-    var title = $('nTitle').value.trim();
-    var body = $('nBody').value.trim();
-    if (!title && !body && !pendingImages.length) { toast('写点什么吧'); return; }
-    notes.unshift({
-      id: uid(),
-      title: title,
-      body: body,
-      images: pendingImages.slice(),
-      date: today(),
-      synced: false
-    });
-    lsSet('sylvan_notes', notes);
-    $('nTitle').value = ''; $('nBody').value = '';
-    pendingImages = [];
-    clearDraft();
-    renderImgRow();
-    renderNotes();
-    toast('存好了');
-  });
-
-  function renderNotes() {
-    var box = $('noteList');
-    if (!notes.length) { box.innerHTML = '<div class="empty">还没有日记</div>'; return; }
-    box.innerHTML = '';
-    document.querySelector('#panel-note h3').textContent = '我的日记 (' + notes.length + ')';
-    notes.forEach(function (n) {
-      var el = document.createElement('div');
-      el.className = 'note-item';
-      var thumbs = '';
-      if (n.images && n.images.length) {
-        thumbs = '<div class="thumbs">' + n.images.map(function (im) {
-          return '<img src="' + im + '">';
-        }).join('') + '</div>';
-      }
-      el.innerHTML =
-        (n.title ? '<div class="nt">' + n.title + '</div>' : '') +
-        (n.body ? '<div class="nb">' + n.body + '</div>' : '') +
-        thumbs +
-        '<div class="meta"><span class="date">' + n.date + '</span>' +
-        '<span><button class="copy">复制</button>' +
-        '<span class="status ' + (n.synced ? 'synced' : 'pending') + '">' + (n.synced ? '已同步' : '待同步') + '</span>' +
-        '<button class="del" data-id="' + n.id + '">✕</button></span></div>';
-      box.appendChild(el);
-    });
-    box.querySelectorAll('.del').forEach(function (b) {
-      b.addEventListener('click', function () {
-        if (!confirm('确定删除这篇日记吗？')) return;
-        notes = notes.filter(function (n) { return n.id !== b.dataset.id; });
-        lsSet('sylvan_notes', notes);
-        renderNotes();
-      });
-    });
-    box.querySelectorAll('.copy').forEach(function (b) {
-      b.addEventListener('click', function () {
-        var idx = Array.prototype.indexOf.call(box.querySelectorAll('.copy'), b);
-        var n = notes[idx];
-        copyText((n.title ? n.title + '\n' : '') + n.body + '\n—— ' + n.date);
+        renderImgs();
       });
     });
   }
 
   /* ============================================================
-     ④ 设置
+     设置
      ============================================================ */
   $('setBtn').addEventListener('click', function () {
     $('tokenInput').value = token;
@@ -309,7 +472,8 @@
   });
 
   /* ============================================================
-     ⑤ 同步到 GitHub
+     同步到 GitHub：俳句 → poems.json，日记 → notes.json
+     按 id 合并，编辑不重复；图片先传 Cloudinary
      ============================================================ */
   function b64Encode(str) { return btoa(unescape(encodeURIComponent(str))); }
   function b64Decode(str) { return decodeURIComponent(escape(atob(str))); }
@@ -323,7 +487,6 @@
       return r.json();
     });
   }
-
   function ghPut(path, content, sha) {
     var body = { message: 'sync from haiku-app', content: b64Encode(content) };
     if (sha) body.sha = sha;
@@ -337,7 +500,6 @@
     });
   }
 
-  /* 图片 → Cloudinary，返回 URL；没配置则返回 null */
   function uploadImage(dataUrl) {
     if (!cloudName || !preset) return Promise.resolve(null);
     return fetch(dataUrl).then(function (r) { return r.blob(); }).then(function (blob) {
@@ -352,25 +514,61 @@
     });
   }
 
-  function syncOne(path, localItems, mapFn) {
-    return ghGet(path).then(function (remote) {
-      var existing = [];
-      if (remote && remote.content) {
-        try { existing = JSON.parse(b64Decode(remote.content)); } catch (e) {}
-      }
-      if (!Array.isArray(existing)) existing = [];
-      var newItems = localItems.filter(function (it) { return !it.synced; });
-      if (!newItems.length) return { count: 0 };
+  function sameContent(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
 
-      var merged = existing.slice();
-      return Promise.all(newItems.map(mapFn)).then(function (mapped) {
-        mapped.forEach(function (m) { if (m) merged.push(m); });
-        var sha = remote ? remote.sha : undefined;
-        return ghPut(path, JSON.stringify(merged, null, 2), sha).then(function () {
-          return { count: newItems.length };
-        });
+  /* 单个数组的合并同步，返回 Promise */
+  function mergeAndPush(path, local, strip) {
+    return ghGet(path).then(function (remote) {
+      var remoteList = [];
+      if (remote && remote.content) {
+        try { remoteList = JSON.parse(b64Decode(remote.content)); } catch (e) {}
+      }
+      if (!Array.isArray(remoteList)) remoteList = [];
+
+      var pending = local.filter(function (x) { return !x.synced; });
+      if (!pending.length) return;   // 这一侧没有待同步内容，跳过（不报错）
+
+      var mapped = pending.map(function (x) {
+        var m = strip(x);
+        return { id: x.id || '', lines: m.lines, title: m.title, body: m.body, images: m.images, date: m.date || '' };
+      });
+
+      mapped.forEach(function (m) {
+        var hit = null;
+        for (var i = 0; i < remoteList.length; i++) {
+          if (m.id && remoteList[i].id === m.id) { hit = remoteList[i]; break; }
+        }
+        if (hit) {
+          for (var k in m) if (m[k] !== undefined) hit[k] = m[k];
+        } else {
+          var dup = remoteList.some(function (r) { return sameContent(r, m); });
+          if (!dup) remoteList.push(m);
+        }
+      });
+
+      var sha = remote ? remote.sha : undefined;
+      return ghPut(path, JSON.stringify(remoteList, null, 2), sha).then(function () {
+        local.forEach(function (x) { x.synced = true; });
       });
     });
+  }
+
+  function syncHaikus() {
+    return mergeAndPush(POEMS_PATH, haikus, function (h) {
+      return { lines: h.lines || [] };
+    }).then(function () { lsSet('sylvan_haikus', haikus); });
+  }
+
+  function syncNotes() {
+    return mergeAndPush(NOTES_PATH, notes, function (n) {
+      return { title: n.title || '', body: n.body || '', images: n.images || [] };
+    }).then(function () { lsSet('sylvan_notes', notes); });
+  }
+
+  function syncMoods() {
+    return mergeAndPush(MOODS_PATH, moods, function (m) {
+      return { type: m.type || '', text: m.text || '', note: m.note || '', date: m.date || '', time: m.time || '' };
+    }).then(function () { lsSet('sylvan_moods', moods); });
   }
 
   $('syncBtn').addEventListener('click', function () {
@@ -379,33 +577,11 @@
     btn.disabled = true;
     btn.textContent = '同步中…';
 
-    var pHaikus = syncOne('js/poems.json', haikus, function (h) {
-      return Promise.resolve({ lines: h.lines, date: h.date || '' });
-    });
+    var task = [syncHaikus(), syncNotes(), syncMoods()];
 
-    var pNotes = syncOne('js/notes.json', notes, function (n) {
-      var imgs = n.images || [];
-      var uploads = imgs.map(uploadImage);
-      return Promise.all(uploads).then(function (urls) {
-        var good = urls.filter(function (u) { return u; });
-        return {
-          title: n.title || '',
-          body: n.body || '',
-          images: good,
-          date: n.date || ''
-        };
-      });
-    });
-
-    Promise.all([pHaikus, pNotes]).then(function (res) {
-      var hc = res[0].count, nc = res[1].count;
-      haikus.forEach(function (h) { h.synced = true; });
-      notes.forEach(function (n) { n.synced = true; });
-      lsSet('sylvan_haikus', haikus);
-      lsSet('sylvan_notes', notes);
-      renderHaikus(); renderNotes();
-      var imgNote = notes.some(function (n) { return n.images.length && !cloudName; });
-      toast('同步完成 · 俳句 ' + hc + ' 首，日记 ' + nc + ' 篇' + (imgNote ? '（图片未配置，只同步了文字）' : ''));
+    Promise.all(task).then(function () {
+      renderCurrent();
+      toast('同步完成');
     }).catch(function (err) {
       toast('同步失败：' + err.message);
     }).finally(function () {
@@ -415,8 +591,5 @@
   });
 
   /* ---------- 初始化 ---------- */
-  restoreDraft();
-  renderHaikus();
-  renderNotes();
-  renderImgRow();
+  renderCurrent();
 })();

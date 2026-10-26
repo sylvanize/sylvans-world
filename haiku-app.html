@@ -9,155 +9,182 @@
   <meta name="theme-color" content="#E1DEDB">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="assets/penguins/penguin0.png">
-  <title>sylvan's 本子 · 俳句 & 日常</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
+  <title>sylvan's 本子</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
       background: #E1DEDB;
       color: #282828;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Segoe UI', sans-serif;
       -webkit-font-smoothing: antialiased;
       padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     }
     ::selection { background: #282828; color: #E1DEDB; }
 
-    /* ===== 顶栏 ===== */
-    .app-nav {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 20px 22px 8px;
+    .top {
+      position: sticky; top: 0; z-index: 40;
+      background: rgba(225,222,219,.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 16px 18px 8px;
     }
-    .app-nav .brand { font-family: 'Playfair Display', serif; font-style: italic; font-size: 21px; opacity: .85; }
-    .app-nav a { color: #282828; text-decoration: none; font-size: 14px; opacity: .7; }
-    .app-nav a:hover { opacity: 1; }
+    .top .row { display: flex; justify-content: space-between; align-items: center; }
+    .top .title { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+    .top .count { font-size: 13px; color: rgba(40,40,40,.55); margin-top: 2px; }
+    .top .links { display: flex; gap: 14px; }
+    .top .links a { color: #282828; text-decoration: none; font-size: 13px; opacity: .6; }
+    .top .links a:hover { opacity: 1; }
 
-    /* ===== Tab ===== */
+    /* ===== Tab 分段控件 ===== */
     .tabs {
       display: flex; gap: 4px;
-      margin: 12px 22px;
+      margin-top: 12px;
       background: rgba(40,40,40,.06);
-      border-radius: 999px;
-      padding: 4px;
+      border-radius: 11px;
+      padding: 3px;
     }
-    .tab {
+    .tabs .tab {
       flex: 1;
+      text-align: center;
+      padding: 9px 0;
+      border-radius: 9px;
       border: none; background: none;
-      padding: 11px 0;
-      border-radius: 999px;
-      font-size: 15px; letter-spacing: .12em;
-      color: rgba(40,40,40,.55);
+      font-size: 14px; color: rgba(40,40,40,.6);
       cursor: pointer;
-      transition: all .25s;
+      transition: background .18s, color .18s;
     }
-    .tab.on { background: #282828; color: #E1DEDB; }
+    .tabs .tab.on {
+      background: #fff;
+      color: #282828;
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    }
 
-    /* ===== 面板 ===== */
-    .panel { display: none; }
-    .panel.on { display: block; }
-
-    /* ===== 写作卡片 ===== */
-    .compose {
-      margin: 10px 22px;
+    /* ===== 心情页 ===== */
+    .mood-top {
       background: #fff;
       border-radius: 14px;
-      padding: 20px 18px;
-      box-shadow: 0 4px 24px rgba(40,40,40,.08);
+      margin: 10px 18px;
+      padding: 22px 18px 18px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.04);
+      text-align: center;
     }
-    .compose h2 {
-      font-size: 14px; font-weight: 500; letter-spacing: .18em;
-      text-transform: uppercase; opacity: .55; margin-bottom: 14px;
-    }
-    .compose textarea, .compose input[type=text] {
-      width: 100%;
-      border: none; outline: none; resize: none;
-      background: transparent;
-      font-family: 'Inter', sans-serif;
-      font-size: 17px; font-weight: 300; line-height: 1.7;
+    .mood-top .mood-now {
+      font-size: 22px;
+      font-weight: 700;
+      min-height: 32px;
+      margin: 10px 0 16px;
+      line-height: 1.5;
+      white-space: pre-line;
       color: #282828;
-      padding: 6px 0;
     }
-    .compose input[type=text] { font-size: 20px; font-weight: 500; letter-spacing: .02em; }
-    .compose textarea + textarea, .compose textarea + input, .compose input + textarea { border-top: 1px solid rgba(40,40,40,.08); }
-    .compose textarea::placeholder, .compose input::placeholder { color: rgba(40,40,40,.3); }
-    .save-row { display: flex; justify-content: flex-end; margin-top: 10px; }
-    .save-btn {
-      background: #282828; color: #E1DEDB;
-      border: none; border-radius: 999px;
-      padding: 12px 26px;
-      font-size: 15px; letter-spacing: .08em;
+    .mood-top .mood-now.empty { color: rgba(40,40,40,.35); font-weight: 400; font-size: 15px; }
+    .mood-btns { display: flex; gap: 10px; }
+    .mood-btns button {
+      flex: 1;
+      border: none; border-radius: 12px;
+      padding: 14px 0;
+      font-size: 15px;
       cursor: pointer;
-      transition: opacity .2s, transform .15s;
+      transition: transform .12s, opacity .15s;
     }
-    .save-btn:active { transform: scale(.95); }
-    .save-btn:disabled { opacity: .35; }
+    .mood-btns button:active { transform: scale(.96); }
+    .mood-btns .happy { background: #FDF3E3; color: #8a5a12; }
+    .mood-btns .sad { background: #E9EDF5; color: #3b4f78; }
+    .mood-stat { font-size: 12px; color: rgba(40,40,40,.5); margin-top: 14px; }
 
-    /* ===== 图片选择 ===== */
-    .img-row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
-    .img-box { position: relative; width: 90px; height: 90px; border-radius: 10px; overflow: hidden; background: rgba(40,40,40,.05); }
-    .img-box img { width: 100%; height: 100%; object-fit: cover; }
-    .img-box .rm {
-      position: absolute; top: 4px; right: 4px;
-      width: 22px; height: 22px; border-radius: 50%;
-      background: rgba(40,40,40,.75); color: #fff;
-      border: none; font-size: 13px; line-height: 1;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    .mood-group-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(40,40,40,.55);
+      padding: 14px 18px 6px;
     }
-    .img-add {
-      width: 90px; height: 90px; border-radius: 10px;
-      border: 1.5px dashed rgba(40,40,40,.3);
-      background: none; color: rgba(40,40,40,.45);
-      font-size: 30px; font-weight: 300; cursor: pointer;
+    .mood-card { display: flex; align-items: center; gap: 12px; }
+    .mood-card .face {
+      font-size: 12px; font-weight: 700;
+      width: 42px; text-align: center; flex-shrink: 0;
+      padding: 4px 0; border-radius: 8px;
     }
+    .mood-card .face.happy { background: #FDF3E3; color: #8a5a12; }
+    .mood-card .face.sad { background: #E9EDF5; color: #3b4f78; }
+    .mood-card .mood-line { flex: 1; min-width: 0; }
+    .mood-card .mood-line .mt2 { font-size: 16px; font-weight: 600; }
+    .mood-card .mood-line .mn {
+      font-size: 13px; color: rgba(40,40,40,.6); margin-top: 3px;
+      white-space: pre-line;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .mood-card .meta { font-size: 12px; color: rgba(40,40,40,.5); flex-shrink: 0; }
 
-    /* ===== 列表 ===== */
-    .my-list { padding: 18px 22px 40px; }
-    .my-list h3 {
-      font-size: 13px; font-weight: 500; letter-spacing: .2em;
-      text-transform: uppercase; opacity: .5;
-      margin-bottom: 8px;
-    }
-    .haiku-item, .note-item {
+    .tanuki-zone {
       background: #fff;
+      border-radius: 14px;
+      margin: 0 18px 12px;
+      padding: 18px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.04);
+      text-align: center;
+    }
+    .tanuki-zone .tanuki-face { font-size: 44px; line-height: 1.2; }
+    .tanuki-zone .tanuki-line { font-size: 14px; font-weight: 600; margin-top: 8px; }
+    .tanuki-zone .tanuki-sub { font-size: 12px; color: rgba(40,40,40,.5); margin-top: 5px; }
+
+    .search {
+      width: 100%;
+      margin-top: 10px;
+      padding: 11px 16px;
+      border: none; outline: none;
       border-radius: 12px;
+      background: rgba(40,40,40,.06);
+      font-size: 15px; color: #282828;
+    }
+    .search::placeholder { color: rgba(40,40,40,.35); }
+
+    .pane { padding: 8px 18px 110px; }
+    .pane[hidden] { display: none; }
+
+    .card {
+      background: #fff;
+      border-radius: 14px;
       padding: 16px;
       margin-bottom: 12px;
-      box-shadow: 0 2px 14px rgba(40,40,40,.05);
+      box-shadow: 0 1px 4px rgba(0,0,0,.04);
+      cursor: pointer;
+      transition: transform .12s;
     }
-    .haiku-item .txt { font-size: 16px; font-weight: 300; line-height: 1.8; white-space: pre-line; }
-    .note-item .nt { font-size: 17px; font-weight: 500; margin-bottom: 6px; }
-    .note-item .nb { font-size: 14px; font-weight: 300; line-height: 1.7; white-space: pre-line; opacity: .85; }
-    .note-item .thumbs { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
-    .note-item .thumbs img { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; }
-    .haiku-item .meta, .note-item .meta {
+    .card:active { transform: scale(.98); }
+    .card .ct { font-size: 17px; font-weight: 600; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+    .card .cb {
+      font-size: 13.5px; color: rgba(40,40,40,.65); line-height: 1.7;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden; white-space: pre-line;
+    }
+    .card .thumbs { display: flex; gap: 6px; margin-top: 10px; }
+    .card .thumbs img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; }
+    .card .meta {
       display: flex; justify-content: space-between; align-items: center;
-      margin-top: 10px;
-      font-size: 12px; letter-spacing: .1em;
+      margin-top: 10px; font-size: 12px; color: rgba(40,40,40,.5);
     }
-    .haiku-item .date, .note-item .date { opacity: .45; text-transform: uppercase; }
-    .haiku-item .status, .note-item .status { font-size: 11px; letter-spacing: .12em; }
-    .status.synced { color: #4a7c59; }
-    .status.pending { color: #b5813a; }
-    .copy {
-      background: none; border: 1px solid rgba(40,40,40,.2);
-      border-radius: 999px;
-      font-size: 11px; letter-spacing: .1em;
-      color: rgba(40,40,40,.55);
-      cursor: pointer; padding: 3px 10px; margin-right: 6px;
-    }
-    .copy:active { opacity: .6; }
-    .del {
-      background: none; border: none;
-      font-size: 15px; color: rgba(40,40,40,.35);
-      cursor: pointer; padding: 2px 6px;
-    }
+    .card .status.synced { color: #4a7c59; }
+    .card .status.pending { color: #b5813a; }
 
-    /* ===== 底部操作条 ===== */
+    .empty { text-align: center; padding: 60px 0; color: rgba(40,40,40,.45); font-size: 14px; }
+
+    .fab {
+      position: fixed; right: 20px; bottom: calc(96px + env(safe-area-inset-bottom));
+      width: 58px; height: 58px; border-radius: 50%;
+      background: #282828; color: #E1DEDB;
+      border: none; font-size: 30px; font-weight: 300;
+      box-shadow: 0 6px 20px rgba(0,0,0,.22);
+      cursor: pointer; z-index: 60;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform .12s;
+    }
+    .fab:active { transform: scale(.94); }
+
     .bottom-bar {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 35;
       display: flex; gap: 10px;
-      padding: 12px 22px calc(14px + env(safe-area-inset-bottom));
+      padding: 12px 18px calc(14px + env(safe-area-inset-bottom));
       background: rgba(225,222,219,.92);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
@@ -166,9 +193,7 @@
       flex: 1;
       background: #282828; color: #E1DEDB;
       border: none; border-radius: 999px;
-      padding: 14px 0;
-      font-size: 15px; letter-spacing: .1em;
-      cursor: pointer;
+      padding: 13px 0; font-size: 15px; cursor: pointer;
       transition: opacity .2s, transform .15s;
     }
     .sync-btn:active { transform: scale(.97); }
@@ -176,10 +201,54 @@
     .set-btn {
       background: none; border: 1px solid rgba(40,40,40,.3);
       border-radius: 999px; color: #282828;
-      padding: 0 20px; font-size: 14px; cursor: pointer;
+      padding: 0 18px; font-size: 14px; cursor: pointer;
     }
 
-    /* ===== 设置面板 ===== */
+    .editor {
+      position: fixed; inset: 0; z-index: 50;
+      background: #E1DEDB;
+      display: flex; flex-direction: column;
+      transform: translateY(100%); transition: transform .28s ease;
+    }
+    .editor.open { transform: none; }
+    .editor .bar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 18px;
+    }
+    .editor .bar button {
+      background: none; border: none;
+      font-size: 15px; color: #282828; cursor: pointer;
+      padding: 6px 10px;
+    }
+    .editor .bar .done { font-weight: 600; }
+    .editor .bar .del-btn { color: #c0392b; }
+    .editor .body { flex: 1; overflow-y: auto; padding: 10px 20px 30px; }
+    .editor .lines { background: #fff; border-radius: 14px; padding: 20px 18px; }
+    .editor input[type=text], .editor textarea {
+      width: 100%; border: none; outline: none; resize: none;
+      background: transparent; color: #282828;
+      font-family: 'PingFang SC', sans-serif;
+      font-size: 17px; font-weight: 300; line-height: 1.7;
+      padding: 10px 0;
+    }
+    .editor input + input, .editor textarea { border-top: 1px solid rgba(40,40,40,.08); }
+    .editor input::placeholder, .editor textarea::placeholder { color: rgba(40,40,40,.3); }
+    .editor .hint { font-size: 12px; color: rgba(40,40,40,.5); text-align: center; padding: 10px 0 4px; }
+    .editor .imgbox { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+    .editor .imgbox .box { position: relative; }
+    .editor .imgbox .box img { width: 96px; height: 96px; object-fit: cover; border-radius: 10px; display: block; }
+    .editor .imgbox .box .rm {
+      position: absolute; top: -6px; right: -6px;
+      width: 22px; height: 22px; border-radius: 50%;
+      border: none; background: #282828; color: #E1DEDB;
+      font-size: 11px; cursor: pointer;
+    }
+    .editor .imgbox .add {
+      width: 96px; height: 96px; border-radius: 10px;
+      border: 1.5px dashed rgba(40,40,40,.35); background: none;
+      font-size: 26px; color: rgba(40,40,40,.45); cursor: pointer;
+    }
+
     .sheet {
       position: fixed; inset: 0; z-index: 100;
       background: rgba(40,40,40,.4);
@@ -224,84 +293,102 @@
       font-size: 14px; padding: 12px 0 4px; cursor: pointer;
     }
 
-    /* ===== toast ===== */
     .toast {
-      position: fixed; left: 50%; bottom: 110px;
+      position: fixed; left: 50%; bottom: 96px;
       transform: translateX(-50%) translateY(10px);
       background: #282828; color: #E1DEDB;
       padding: 10px 22px; border-radius: 999px;
-      font-size: 14px; letter-spacing: .04em;
-      opacity: 0; transition: opacity .25s, transform .25s;
-      z-index: 200; pointer-events: none; text-align: center; white-space: nowrap; max-width: 86vw;
+      font-size: 14px; opacity: 0; transition: opacity .25s, transform .25s;
+      z-index: 90; pointer-events: none; text-align: center; max-width: 86vw; white-space: nowrap;
     }
     .toast.show { opacity: 1; transform: translateX(-50%); }
-
-    .empty { text-align: center; padding: 40px 0; font-size: 14px; opacity: .4; font-weight: 300; }
   </style>
 </head>
 <body>
 
-  <nav class="app-nav">
-    <span class="brand">sylvan's 本子</span>
-    <div style="display:flex;gap:14px;">
-      <a href="poems.html">俳句集</a>
-      <a href="notes.html">日常</a>
+  <div class="top">
+    <div class="row">
+      <div>
+        <div class="title">本子</div>
+        <div class="count" id="count">0 首</div>
+      </div>
+      <div class="links">
+        <a href="poems.html">俳句集</a>
+        <a href="notes.html">日记集</a>
+      </div>
     </div>
-  </nav>
-
-  <!-- Tab 切换 -->
-  <div class="tabs">
-    <button class="tab on" id="tabHaiku" data-tab="haiku">俳句</button>
-    <button class="tab" id="tabNote" data-tab="note">日常</button>
+    <div class="tabs">
+      <button class="tab on" id="tabHaiku">俳句</button>
+      <button class="tab" id="tabNote">备忘录</button>
+      <button class="tab" id="tabMood">心情</button>
+    </div>
+    <input type="text" class="search" id="search" placeholder="搜索">
   </div>
 
-  <!-- ===== 俳句面板 ===== -->
-  <div class="panel on" id="panel-haiku">
-    <div class="compose">
-      <h2>记一首俳句</h2>
-      <textarea id="l1" rows="1" placeholder="第一行"></textarea>
-      <textarea id="l2" rows="1" placeholder="第二行"></textarea>
-      <textarea id="l3" rows="1" placeholder="第三行"></textarea>
-      <div class="save-row">
-        <button class="save-btn" id="saveHaikuBtn">存进俳句本</button>
+  <div class="pane" id="panel-haiku"></div>
+  <div class="pane" id="panel-note" hidden></div>
+  <div class="pane" id="panel-mood" hidden>
+    <div class="mood-top">
+      <div style="font-size:13px;color:rgba(40,40,40,.5);">此刻的心情</div>
+      <div class="mood-now" id="moodNow"></div>
+      <div class="mood-btns">
+        <button class="happy" id="moodHappy">开心</button>
+        <button class="sad" id="moodSad">悲伤</button>
       </div>
+      <div class="mood-stat" id="moodStat"></div>
     </div>
-    <div class="my-list">
-      <h3>我的俳句</h3>
-      <div id="haikuList"></div>
-    </div>
-  </div>
-
-  <!-- ===== 日常面板 ===== -->
-  <div class="panel" id="panel-note">
-    <div class="compose">
-      <h2>记一段日常</h2>
-      <input type="text" id="nTitle" placeholder="标题（可留空）">
-      <textarea id="nBody" rows="6" placeholder="写点什么…"></textarea>
-      <div class="img-row" id="imgRow">
-        <button class="img-add" id="imgAdd">＋</button>
-      </div>
-      <div class="save-row">
-        <button class="save-btn" id="saveNoteBtn">存进日记</button>
-      </div>
-    </div>
-    <div class="my-list">
-      <h3>我的日记</h3>
-      <div id="noteList"></div>
+    <div id="moodGroups"></div>
+    <div class="tanuki-zone" id="tanukiZone" hidden>
+      <div class="tanuki-face" id="tanukiFace"></div>
+      <div class="tanuki-line" id="tanukiLine"></div>
+      <div class="tanuki-sub" id="tanukiSub"></div>
     </div>
   </div>
 
-  <!-- 底部操作 -->
   <div class="bottom-bar">
     <button class="sync-btn" id="syncBtn">同步到网站</button>
     <button class="set-btn" id="setBtn">设置</button>
+  </div>
+  <button class="fab" id="fab">＋</button>
+
+  <!-- 编辑器 -->
+  <div class="editor" id="editor">
+    <div class="bar">
+      <button id="cancelBtn">取消</button>
+      <button class="del-btn" id="editDel" style="visibility:hidden">删除</button>
+      <button class="done" id="doneBtn">完成</button>
+    </div>
+    <div class="body">
+      <!-- 俳句输入组 -->
+      <div class="lines" id="group-haiku">
+        <input type="text" id="l1" placeholder="第一行">
+        <input type="text" id="l2" placeholder="第二行">
+        <input type="text" id="l3" placeholder="第三行">
+        <div class="hint">写完后点"完成"保存到本机，再去底部"同步到网站"上传</div>
+      </div>
+      <!-- 日记输入组 -->
+      <div class="lines" id="group-note" hidden>
+        <input type="text" id="mTitle" placeholder="标题">
+        <textarea id="mBody" rows="8" placeholder="写下今天的日常…"></textarea>
+        <div class="imgbox" id="mImgs"></div>
+        <div class="hint">最多 2 张图，保存后去底部"同步到网站"上传</div>
+        <input type="file" id="fileInput" accept="image/*" style="display:none">
+      </div>
+      <!-- 心情输入组 -->
+      <div class="lines" id="group-mood" hidden>
+        <div style="font-size:15px;font-weight:600;padding:10px 0 4px;" id="moodEditType">心情</div>
+        <div style="font-size:13px;color:rgba(40,40,40,.55);padding-bottom:4px;" id="moodEditText"></div>
+        <input type="text" id="moodNote" placeholder="想多说一句？(可留空)">
+        <div class="hint">点"完成"保存</div>
+      </div>
+    </div>
   </div>
 
   <!-- 设置面板 -->
   <div class="sheet" id="sheet">
     <div class="sheet-panel">
       <h3>设置</h3>
-      <p>配一次就行，之后自动同步。</p>
+      <p>配一次就行，俳句和备忘录共用。</p>
       <label>GitHub 密钥（必填）</label>
       <div class="step">
         1. 手机浏览器打开<br><b>https://github.com/settings/tokens?type=beta</b><br>
@@ -312,17 +399,14 @@
       <input type="password" id="tokenInput" placeholder="github_pat_...">
       <label>Cloudinary 上传密钥（传图片用，可选）</label>
       <div class="step">
-        不填的话，图片只存在手机本地，文字照常同步。<br>
-        要同步图片：Cloudinary 控制台 → Settings → Upload → Upload presets → <b>Add unsigned preset</b>，把 preset 名字和 Cloud name 填下面。
+        备忘录要传照片才需要。Cloudinary 控制台 → Settings → Upload → Upload presets → <b>Add unsigned preset</b>，把 preset 名字和 Cloud name 填下面。
       </div>
       <input type="text" id="cloudNameInput" placeholder="cloud name（如 jwjttap0）">
-      <input type="text" id="presetInput" placeholder="unsigned preset 名">
+      <input type="text" id="presetInput" placeholder="unsigned preset 名（如 mydaily）">
       <button class="ok-btn" id="tokenOk">保存</button>
       <button class="cancel" id="tokenCancel">取消</button>
     </div>
   </div>
-
-  <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
 
   <div class="toast" id="toast"></div>
 
