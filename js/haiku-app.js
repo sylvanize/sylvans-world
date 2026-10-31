@@ -578,6 +578,38 @@
     } else {
       return;
     }
+    // Supabase 同步：新内容自动上云
+    if (window.SUPA && editingKind !== 'mood') {
+      var supaEntry = null, rec = null;
+      if (editingKind === 'haiku') {
+        rec = editingId ? haikus.find(function(x){return x.id===editingId;}) : haikus[0];
+        if (rec) supaEntry = {
+          text: rec.lines.join('\n'),
+          date: (rec.date||'').replace(/\./g,'-'),
+          time: (rec.date||'') ? rec.date.replace(/\./g,'年')+'日' : '',
+          source: '本子', tags: ['俳句'], images: []
+        };
+      } else if (editingKind === 'note') {
+        rec = editingId ? notes.find(function(x){return x.id===editingId;}) : notes[0];
+        if (rec) supaEntry = {
+          text: ((rec.title||'')+'\n'+(rec.body||'')).trim(),
+          date: (rec.date||'').replace(/\./g,'-'),
+          time: (rec.date||'') ? rec.date.replace(/\./g,'年')+'日' : '',
+          source: '本子', tags: rec.arcTags||['日记'], images: rec.images||[]
+        };
+      }
+      if (supaEntry) {
+        var p;
+        if (rec._supaId) {
+          p = window.SUPA.update(rec._supaId, supaEntry);
+        } else {
+          p = window.SUPA.insert(supaEntry).then(function(rows){
+            if (rows && rows[0]) { rec._supaId = rows[0].id; lsSet(editingKind==='haiku'?'sylvan_haikus':'sylvan_notes', editingKind==='haiku'?haikus:notes); }
+          });
+        }
+        p.catch(function(){});
+      }
+    }
     closeEditor();
     renderCurrent();
     toast('已保存');
@@ -586,15 +618,21 @@
   $('editDel').addEventListener('click', function () {
     if (!editingKind || !editingId) return;
     if (!confirm('确定删除吗？')) return;
+    var rec = null;
     if (editingKind === 'haiku') {
+      rec = haikus.find(function(x){return x.id===editingId;});
       haikus = haikus.filter(function (x) { return x.id !== editingId; });
       lsSet('sylvan_haikus', haikus);
     } else if (editingKind === 'note') {
+      rec = notes.find(function(x){return x.id===editingId;});
       notes = notes.filter(function (x) { return x.id !== editingId; });
       lsSet('sylvan_notes', notes);
     } else if (editingKind === 'mood') {
       moods = moods.filter(function (x) { return x.id !== editingId; });
       lsSet('sylvan_moods', moods);
+    }
+    if (rec && rec._supaId && window.SUPA) {
+      window.SUPA.remove(rec._supaId).catch(function(){});
     }
     closeEditor();
     renderCurrent();

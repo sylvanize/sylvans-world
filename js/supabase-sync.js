@@ -18,6 +18,7 @@
   }
 
   window.SUPA = {
+<<<<<<< HEAD
     // 从云端拉全部
     load: function(){
       return supa('entries?select=id,text,date,time,source,tags,images&order=date.desc');
@@ -35,10 +36,25 @@
       return supa('entries?id=eq.' + id, {method:'DELETE'});
     },
     // 批量导入（首次迁移）
+=======
+    load: function(){
+      return supa('entries?select=id,text,date,time,source,tags,images&order=date.desc');
+    },
+    insert: function(entry){
+      return supa('entries', {method:'POST', body: JSON.stringify([entry]), headers:{'Prefer':'return=representation'}});
+    },
+    update: function(id, entry){
+      return supa('entries?id=eq.' + id, {method:'PATCH', body: JSON.stringify(entry)});
+    },
+    remove: function(id){
+      return supa('entries?id=eq.' + id, {method:'DELETE'});
+    },
+>>>>>>> 44fe272 (connect supabase)
     bulkInsert: function(entries){
       return supa('entries', {method:'POST', body: JSON.stringify(entries), headers:{'Prefer':'return=minimal'}});
     }
   };
+<<<<<<< HEAD
 
   // 首次：如果云端为空，把本地 archive-data.js + synced-data.js 的数据迁上去
   window.SUPA_MIGRATE = function(){
@@ -64,4 +80,6 @@
       return Promise.all(batches).then(function(){ return local; });
     });
   };
+=======
+>>>>>>> 44fe272 (connect supabase)
 })();
