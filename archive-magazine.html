@@ -394,9 +394,10 @@
       if(state.view==='思考')meta.push('<span class="flow">'+esc(d.tags.join(' · '))+'</span>');
       if(d._edited)meta.push('<span class="edited-flag">已改</span>');
       if(isAdmin)meta.push('<button class="edit-btn" data-key="'+d._key+'">编辑</button>');
-      // 日记/回忆/随笔第一行作为标题加粗，其他类型正常显示
+      // 除了碎片和俳句，其他都加粗第一行
       var lines=d.text.split('\n');
-      var hasTitle=['日记','回忆','随笔'].some(function(t){return d.tags.indexOf(t)!==-1;});
+      var noBold=['碎片','俳句'];
+      var hasTitle=!noBold.some(function(t){return d.tags.indexOf(t)!==-1;});
       var txt;
       if(hasTitle && lines[0]){
         txt='<div class="title">'+esc(lines[0])+'</div>';
