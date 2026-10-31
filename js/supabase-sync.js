@@ -12,8 +12,8 @@
       'Content-Type': 'application/json'
     }, opts.headers || {});
     return fetch(SUPA_URL + '/rest/v1/' + path, opts).then(function(r){
-      if(!r.ok) return r.text().then(function(t){ throw new Error(t); });
-      return r.status === 204 ? null : r.json();
+      if(!r.ok) return r.text().then(function(t){ throw new Error(t || ('HTTP '+r.status)); });
+      return r.text().then(function(t){ return t ? JSON.parse(t) : null; });
     });
   }
 
