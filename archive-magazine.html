@@ -358,12 +358,19 @@
 
   /* ---- 视图 tab ---- */
   var tabsEl=document.getElementById('tabs');
+  var fragUnlocked=sessionStorage.getItem('sylvan_frag')==='1';
   VIEWS.forEach(function(v){
     var b=document.createElement('button');
     b.className='tab'+(v===state.view?' active':'');
     b.dataset.view=v;
     b.innerHTML='<span>'+esc(v)+'</span><span class="n">'+viewItems(v).length+'</span>';
     b.onclick=function(){
+      if(v==='碎片'&&!fragUnlocked){
+        var p=prompt('碎片密码：');
+        if(p!=='030520'){alert('密码错误');return;}
+        fragUnlocked=true;
+        sessionStorage.setItem('sylvan_frag','1');
+      }
       state.view=v;state.theme=null;state.drawer=null;state.q='';
       searchInput.value='';clearBtn.classList.remove('show');
       document.querySelectorAll('.tab').forEach(function(x){x.classList.toggle('active',x===b);});
