@@ -440,9 +440,9 @@
     var d=currentEntry(editingKey);
     if(d&&d._id){
       window.SUPA.update(d._id,{text:txt}).then(function(){
-        d.text=txt;d._edited=true;
+        for(var i=0;i<RAW.length;i++){if(RAW[i]._id===d._id){RAW[i].text=txt;break;}}
         rebuild();render();closeEditor();
-      });
+      }).catch(function(e){alert('保存失败：'+e.message);});
     }else{
       var ov=getOverrides();
       var prev=ov[editingKey]||{};
@@ -457,8 +457,9 @@
     var d=currentEntry(editingKey);
     if(d&&d._id){
       window.SUPA.remove(d._id).then(function(){
+        RAW=RAW.filter(function(x){return x._id!==d._id;});
         rebuild();render();closeEditor();
-      });
+      }).catch(function(e){alert('删除失败：'+e.message);});
     }else{
       var ov=getOverrides();
       var prev=ov[editingKey]||{};
@@ -486,7 +487,9 @@
   /* 从 Supabase 加载；空的话自动迁移本地数据 */
   window.SUPA.load().then(function(rows){
     if(!rows.length){
-      return window.SUPA.bulkInsert(LOCAL_DATA).then(function(){return window.SUPA.load();});
+      return window.SUPA.bulkInsert(LOCAL_DATA).then(function(){
+        return window.SUPA.load();
+      });
     }
     return rows;
   }).then(function(rows){
@@ -496,7 +499,8 @@
     DATA.forEach(function(d){d._key=String(d._id||hashKey(d.text));});
     RAW=DATA.slice();
     rebuild();renderFilters();render();
-  }).catch(function(){
+  }).catch(function(e){
+    alert('云端连接失败，使用本地数据：'+e.message);
     DATA=LOCAL_DATA.slice();
     DATA.forEach(function(d){d._key=hashKey(d.text);});
     RAW=DATA;
