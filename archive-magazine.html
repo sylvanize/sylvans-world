@@ -69,16 +69,19 @@
 
   /* ---------- 条目 ---------- */
   .content{padding-top:6px;padding-bottom:calc(48px + env(safe-area-inset-bottom));}
-  .entry{padding:24px 0;border-bottom:1px solid var(--line);}
-  .entry .title{font-size:15px;font-weight:700;line-height:1.6;letter-spacing:.01em;
-    color:#111;margin-bottom:4px;}
-  .entry .body{font-size:15px;font-weight:400;line-height:1.85;letter-spacing:.01em;
-    color:#1d1d1b;white-space:pre-wrap;word-break:break-word;}
-  .entry .imgs{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;}
-  .entry .entry-img{max-width:200px;max-height:200px;border-radius:8px;object-fit:cover;}
-  .entry .meta{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;
-    font-size:10px;letter-spacing:.12em;color:var(--faint);text-transform:uppercase;}
-  .entry .meta .flow{color:#8f8f8b;}
+  .entry{padding:36px 0;border-bottom:1px solid var(--line);}
+  .entry:last-child{border-bottom:none;}
+  .entry .title{font-size:19px;font-weight:700;line-height:1.5;letter-spacing:-.01em;
+    color:#111;margin-bottom:10px;}
+  .entry .body{font-size:15px;font-weight:400;line-height:1.9;letter-spacing:.01em;
+    color:#222;white-space:pre-wrap;word-break:break-word;}
+  .entry .imgs{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px;}
+  .entry .entry-img{max-width:240px;max-height:240px;border-radius:2px;object-fit:cover;}
+  .entry .meta{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:16px;
+    font-size:10px;letter-spacing:.15em;color:var(--faint);text-transform:uppercase;}
+  .entry .meta .flow{color:#999;}
+  .entry .meta span:not(.flow):not(.edited-flag):not(.edit-btn){
+    padding:3px 8px;border:1px solid var(--line);border-radius:3px;}
   .empty{padding:72px 0;text-align:center;font-size:13px;letter-spacing:.08em;color:var(--faint);line-height:1.9;}
 
   /* ---------- 编辑功能 ---------- */
@@ -289,6 +292,9 @@
   var THEMES=['做自己','身体','他人','活着'];
   var DRAWERS=['还在想的事','身体的感觉','跟自己说的','和人有关的'];
   var state={view:'思考',theme:null,drawer:null,q:''};
+  // 管理员模式：URL 加 ?admin=你的密码 才能编辑删除
+  var ADMIN_PASSWORD='sylvan2026'; // 改这里设你的密码
+  var isAdmin=new URLSearchParams(location.search).get('admin')===ADMIN_PASSWORD;
 
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function isSolo(d){return d.tags.some(function(t){return SOLO.indexOf(t)!==-1;});}
@@ -387,12 +393,17 @@
       meta.push('<span>'+esc(d.source)+'</span>');
       if(state.view==='思考')meta.push('<span class="flow">'+esc(d.tags.join(' · '))+'</span>');
       if(d._edited)meta.push('<span class="edited-flag">已改</span>');
-      meta.push('<button class="edit-btn" data-key="'+d._key+'">编辑</button>');
-      // 第一行作为标题加粗
+      if(isAdmin)meta.push('<button class="edit-btn" data-key="'+d._key+'">编辑</button>');
+      // 日记类第一行作为标题加粗，其他类型正常显示
       var lines=d.text.split('\n');
-      var title=lines[0]?'<div class="title">'+esc(lines[0])+'</div>':'';
-      var body=lines.slice(1).join('\n');
-      var txt=title+(body?'<div class="body">'+esc(body)+'</div>':'');
+      var isDiary=d.tags.indexOf('日记')!==-1;
+      var txt;
+      if(isDiary && lines[0]){
+        txt='<div class="title">'+esc(lines[0])+'</div>';
+        if(lines.length>1) txt+='<div class="body">'+esc(lines.slice(1).join('\n'))+'</div>';
+      }else{
+        txt='<div class="body">'+esc(d.text)+'</div>';
+      }
       // 渲染图片
       var imgs=(d.images||[]).map(function(src){
         return '<img class="entry-img" src="'+esc(src)+'" loading="lazy">';
