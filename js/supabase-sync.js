@@ -18,9 +18,9 @@
   }
 
   window.SUPA = {
-    // 从云端拉全部
+    // 从云端拉全部（只拉未删除的）
     load: function(){
-      return supa('entries?select=id,text,date,time,source,tags,images&order=date.desc');
+      return supa('entries?select=id,text,date,time,source,tags,images&deleted=eq.false&order=date.desc');
     },
     // 新增
     insert: function(entry){
@@ -30,9 +30,9 @@
     update: function(id, entry){
       return supa('entries?id=eq.' + id, {method:'PATCH', body: JSON.stringify(entry)});
     },
-    // 删除
+    // 软删除：标记 deleted=true，不真删
     remove: function(id){
-      return supa('entries?id=eq.' + id, {method:'DELETE'});
+      return supa('entries?id=eq.' + id, {method:'PATCH', body: JSON.stringify({deleted:true})});
     },
     // 批量导入（首次迁移）
     bulkInsert: function(entries){
