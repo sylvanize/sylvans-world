@@ -70,8 +70,12 @@
   /* ---------- 条目 ---------- */
   .content{padding-top:6px;padding-bottom:calc(48px + env(safe-area-inset-bottom));}
   .entry{padding:24px 0;border-bottom:1px solid var(--line);}
-  .entry .txt{font-size:15px;font-weight:400;line-height:1.85;letter-spacing:.01em;
+  .entry .title{font-size:15px;font-weight:700;line-height:1.6;letter-spacing:.01em;
+    color:#111;margin-bottom:4px;}
+  .entry .body{font-size:15px;font-weight:400;line-height:1.85;letter-spacing:.01em;
     color:#1d1d1b;white-space:pre-wrap;word-break:break-word;}
+  .entry .imgs{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;}
+  .entry .entry-img{max-width:200px;max-height:200px;border-radius:8px;object-fit:cover;}
   .entry .meta{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;
     font-size:10px;letter-spacing:.12em;color:var(--faint);text-transform:uppercase;}
   .entry .meta .flow{color:#8f8f8b;}
@@ -384,7 +388,17 @@
       if(state.view==='思考')meta.push('<span class="flow">'+esc(d.tags.join(' · '))+'</span>');
       if(d._edited)meta.push('<span class="edited-flag">已改</span>');
       meta.push('<button class="edit-btn" data-key="'+d._key+'">编辑</button>');
-      return '<div class="entry"><div class="txt">'+esc(d.text)+'</div>'+
+      // 第一行作为标题加粗
+      var lines=d.text.split('\n');
+      var title=lines[0]?'<div class="title">'+esc(lines[0])+'</div>':'';
+      var body=lines.slice(1).join('\n');
+      var txt=title+(body?'<div class="body">'+esc(body)+'</div>':'');
+      // 渲染图片
+      var imgs=(d.images||[]).map(function(src){
+        return '<img class="entry-img" src="'+esc(src)+'" loading="lazy">';
+      }).join('');
+      return '<div class="entry">'+txt+
+             (imgs?'<div class="imgs">'+imgs+'</div>':'')+
              '<div class="meta">'+meta.join('')+'</div></div>';
     }).join('');
     entriesEl.querySelectorAll('.edit-btn').forEach(function(b){
