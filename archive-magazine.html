@@ -159,9 +159,10 @@
 
 <script src="js/archive-data.js"></script>
 <script src="js/synced-data.js"></script>
+<script src="js/supabase-sync.js"></script>
 <script>
 (function(){
-  var DATA=(window.ARCHIVE_DATA||[]).slice();
+  var DATA=[];
 
   /* 自动归类规则（与本子同一套，纯函数） */
   function arcHas(t,kws){return kws.some(function(k){return t.indexOf(k)!==-1;});}
@@ -248,7 +249,8 @@
     });
     return extra;
   }
-  DATA=DATA.concat(loadSynced()).concat(loadNotebook());
+  /* 本地数据作为降级和首次迁移用 */
+  var LOCAL_DATA=(window.ARCHIVE_DATA||[]).slice().concat(loadSynced()).concat(loadNotebook());
 
   /* ===== 本地编辑系统：改动存 localStorage，不写原始数据 ===== */
   var EDIT_KEY='sylvan_archive_edits';
@@ -435,20 +437,35 @@
   document.getElementById('ecSave').addEventListener('click',function(){
     var txt=ecArea.value;
     if(!txt.trim()){ecCount.textContent='写点什么吧';return;}
-    var ov=getOverrides();
-    var prev=ov[editingKey]||{};
-    ov[editingKey]={text:txt,deleted:!!prev.deleted};
-    saveOverrides(ov);
-    rebuild();render();closeEditor();
+    var d=currentEntry(editingKey);
+    if(d&&d._id){
+      window.SUPA.update(d._id,{text:txt}).then(function(){
+        d.text=txt;d._edited=true;
+        rebuild();render();closeEditor();
+      });
+    }else{
+      var ov=getOverrides();
+      var prev=ov[editingKey]||{};
+      ov[editingKey]={text:txt,deleted:!!prev.deleted};
+      saveOverrides(ov);
+      rebuild();render();closeEditor();
+    }
   });
 
   document.getElementById('ecDelete').addEventListener('click',function(){
-    if(!window.confirm('确定删除这条吗？只在本机隐藏，可恢复。'))return;
-    var ov=getOverrides();
-    var prev=ov[editingKey]||{};
-    ov[editingKey]={text:prev.text,deleted:true};
-    saveOverrides(ov);
-    rebuild();render();closeEditor();
+    if(!window.confirm('确定删除这条吗？'))return;
+    var d=currentEntry(editingKey);
+    if(d&&d._id){
+      window.SUPA.remove(d._id).then(function(){
+        rebuild();render();closeEditor();
+      });
+    }else{
+      var ov=getOverrides();
+      var prev=ov[editingKey]||{};
+      ov[editingKey]={text:prev.text,deleted:true};
+      saveOverrides(ov);
+      rebuild();render();closeEditor();
+    }
   });
 
   ecRestore.addEventListener('click',function(){
@@ -466,7 +483,25 @@
     rebuild();renderFilters();render();
   });
 
-  renderFilters();render();
+  /* 从 Supabase 加载；空的话自动迁移本地数据 */
+  window.SUPA.load().then(function(rows){
+    if(!rows.length){
+      return window.SUPA.bulkInsert(LOCAL_DATA).then(function(){return window.SUPA.load();});
+    }
+    return rows;
+  }).then(function(rows){
+    DATA = rows.map(function(r){
+      return {date:r.date||'',time:r.time||'',source:r.source||'',text:r.text||'',tags:r.tags||['日记'],_id:r.id,images:r.images||[]};
+    });
+    DATA.forEach(function(d){d._key=String(d._id||hashKey(d.text));});
+    RAW=DATA.slice();
+    rebuild();renderFilters();render();
+  }).catch(function(){
+    DATA=LOCAL_DATA.slice();
+    DATA.forEach(function(d){d._key=hashKey(d.text);});
+    RAW=DATA;
+    rebuild();renderFilters();render();
+  });
 })();
 </script>
 </body>
