@@ -268,7 +268,7 @@
   var RAW=DATA;
   function rebuild(){
     DATA=RAW.map(function(d){
-      return {date:d.date,time:d.time,source:d.source,text:d.text,tags:d.tags.slice(),_key:d._key};
+      return {date:d.date,time:d.time,source:d.source,text:d.text,tags:d.tags.slice(),_key:d._key,_id:d._id,images:d.images||[]};
     });
     var ov=getOverrides();
     DATA.forEach(function(d){
