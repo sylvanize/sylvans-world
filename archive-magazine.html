@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#FCFBF9">
+<meta name="theme-color" content="#FFFFFF">
 <link rel="manifest" href="archive-manifest.json">
 <title>archive · sylvan's world</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,8 +14,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#FCFBF9; --ink:#161616; --soft:#7d7d7a; --faint:#a8a8a4;
-    --line:#e7e6e2; --field:#f1f0ec;
+    --paper:#FFFFFF; --ink:#111111; --soft:#666666; --faint:#999999;
+    --line:#DDDDDD; --field:#F5F5F5;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html{-webkit-text-size-adjust:100%;}
@@ -28,7 +28,7 @@
 
   /* ---------- 顶部 app bar ---------- */
   .appbar{position:sticky;top:0;z-index:50;
-    background:rgba(252,251,249,.88);
+    background:rgba(255,255,255,.9);
     backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
     padding-top:calc(16px + env(safe-area-inset-top));}
   .bar-row{display:flex;justify-content:space-between;align-items:center;}
@@ -36,12 +36,12 @@
   .brand-sub{font-size:10.5px;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;}
 
   .search-box{display:flex;align-items:center;gap:8px;margin-top:14px;
-    background:var(--field);border-radius:11px;padding:0 14px;height:42px;}
-  .search-box .mag{font-size:13px;color:#b3b2ae;flex-shrink:0;}
+    background:#fff;border:1px solid #ddd;border-radius:11px;padding:0 14px;height:42px;}
+  .search-box .mag{font-size:13px;color:#999;flex-shrink:0;}
   .search-box input{flex:1;min-width:0;border:none;outline:none;background:transparent;
-    font-family:inherit;font-size:14px;color:var(--ink);height:100%;}
-  .search-box input::placeholder{color:#b3b2ae;}
-  .clear-btn{flex-shrink:0;border:none;background:none;color:#9a9995;
+    font-family:inherit;font-size:14px;color:#000;height:100%;}
+  .search-box input::placeholder{color:#999;}
+  .clear-btn{flex-shrink:0;border:none;background:none;color:#999;
     font-size:13px;width:28px;height:28px;border-radius:50%;cursor:pointer;display:none;align-items:center;justify-content:center;}
   .clear-btn.show{display:flex;}
 
