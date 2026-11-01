@@ -156,6 +156,10 @@
     </div>
   </div>
   <div class="ebody wrap">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+      <span style="font-size:10px;letter-spacing:.15em;color:var(--faint);text-transform:uppercase;">日期</span>
+      <input id="ecDate" type="date" style="border:1px solid #ddd;border-radius:6px;padding:6px 10px;font-family:inherit;font-size:13px;outline:none;">
+    </div>
     <textarea id="ecArea" spellcheck="false"></textarea>
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <span id="ecCount" style="font-size:11px;color:var(--faint);letter-spacing:.08em;">0 字</span>
@@ -283,15 +287,17 @@
       if(!e)return;
       if(e.deleted)d._deleted=true;
       if(e.text){d.text=e.text;d._edited=true;}
+      if(e.date){d.date=e.date;}
+      if(e.time){d.time=e.time;}
     });
   }
   rebuild();
 
   var SOLO=['碎片','随笔','回忆','日记','俳句'];
-  var VIEWS=['思考','日记','回忆','随笔','俳句','碎片'];
+  var VIEWS=['日记','回忆','随笔','俳句','碎片','思考'];
   var THEMES=['做自己','身体','他人','活着'];
   var DRAWERS=['还在想的事','身体的感觉','跟自己说的','和人有关的'];
-  var state={view:'思考',theme:null,drawer:null,q:''};
+  var state={view:'日记',theme:null,drawer:null,q:''};
   // 管理员模式：URL 加 ?admin=你的密码 才能编辑删除
   var ADMIN_PASSWORD='sylvan2026'; // 改这里设你的密码
   var isAdmin=new URLSearchParams(location.search).get('admin')===ADMIN_PASSWORD;
@@ -434,6 +440,7 @@
   /* ---- 编辑器交互 ---- */
   var overlay=document.getElementById('editOverlay');
   var ecArea=document.getElementById('ecArea');
+  var ecDate=document.getElementById('ecDate');
   var ecRestore=document.getElementById('ecRestore');
   var ecCount=document.getElementById('ecCount');
   var editingKey=null;
@@ -442,11 +449,24 @@
     for(var i=0;i<DATA.length;i++)if(DATA[i]._key===key)return DATA[i];
     return null;
   }
+  function fmtDate(s){
+    if(!s)return '';
+    var m=String(s).match(/(\d{4})[年\-/.](\d{1,2})[月\-/.](\d{1,2})/);
+    if(m)return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+    return '';
+  }
+  function fmtTime(iso){
+    if(!iso)return '';
+    var p=iso.split('-');
+    if(p.length===3)return p[0]+'年'+parseInt(p[1],10)+'月'+parseInt(p[2],10)+'日';
+    return '';
+  }
   function openEditor(key){
     var d=currentEntry(key);
     if(!d)return;
     editingKey=key;
     ecArea.value=d.text;
+    ecDate.value=fmtDate(d.date)||fmtDate(d.time);
     ecRestore.style.display=d._edited?'block':'none';
     overlay.classList.add('open');
     updateCount();
@@ -464,15 +484,19 @@
     var txt=ecArea.value;
     if(!txt.trim()){ecCount.textContent='写点什么吧';return;}
     var d=currentEntry(editingKey);
+    var newDate=ecDate.value||'';
+    var newTime=fmtTime(newDate);
     if(d&&d._id){
-      window.SUPA.update(d._id,{text:txt}).then(function(){
-        for(var i=0;i<RAW.length;i++){if(RAW[i]._id===d._id){RAW[i].text=txt;break;}}
+      var patch={text:txt};
+      if(newDate){patch.date=newDate;patch.time=newTime;}
+      window.SUPA.update(d._id,patch).then(function(){
+        for(var i=0;i<RAW.length;i++){if(RAW[i]._id===d._id){RAW[i].text=txt;if(newDate){RAW[i].date=newDate;RAW[i].time=newTime;}break;}}
         rebuild();render();closeEditor();
       }).catch(function(e){alert('保存失败：'+e.message);});
     }else{
       var ov=getOverrides();
       var prev=ov[editingKey]||{};
-      ov[editingKey]={text:txt,deleted:!!prev.deleted};
+      ov[editingKey]={text:txt,deleted:!!prev.deleted,date:newDate||prev.date,time:newTime||prev.time};
       saveOverrides(ov);
       rebuild();render();closeEditor();
     }
