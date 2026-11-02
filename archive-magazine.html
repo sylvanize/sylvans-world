@@ -26,7 +26,6 @@
 
   .wrap{width:100%;max-width:800px;margin:0 auto;padding-left:20px;padding-right:20px;}
 
-  /* ---------- 顶部 app bar ---------- */
   .appbar{position:sticky;top:0;z-index:50;
     background:rgba(255,255,255,.9);
     backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
@@ -55,7 +54,6 @@
   .tab.active::after{content:"";position:absolute;left:0;right:0;bottom:5px;height:1.5px;background:var(--ink);}
   .tab.active .n{color:var(--ink);}
 
-  /* ---------- 思考筛选 ---------- */
   .filters{border-bottom:1px solid var(--line);}
   .filter-row{display:flex;gap:18px;overflow-x:auto;scrollbar-width:none;padding:14px 0;}
   .filter-row::-webkit-scrollbar{display:none;}
@@ -67,7 +65,6 @@
   .fbtn.active{color:var(--ink);font-weight:600;}
   .fbtn.active::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1.5px;background:var(--ink);}
 
-  /* ---------- 条目 ---------- */
   .content{padding-top:6px;padding-bottom:calc(48px + env(safe-area-inset-bottom));}
   .entry{padding:36px 0;border-bottom:1px solid var(--line);}
   .entry:last-child{border-bottom:none;}
@@ -84,7 +81,6 @@
     padding:3px 8px;border:1px solid var(--line);border-radius:3px;}
   .empty{padding:72px 0;text-align:center;font-size:13px;letter-spacing:.08em;color:var(--faint);line-height:1.9;}
 
-  /* ---------- 编辑功能 ---------- */
   .edit-btn{background:none;border:none;cursor:pointer;font-family:inherit;
     color:var(--faint);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
     padding:6px 0;min-height:32px;}
@@ -108,7 +104,6 @@
     font-family:inherit;font-size:15px;line-height:1.85;color:var(--ink);min-height:60vh;}
   .editor-overlay .ehint{font-size:11px;color:var(--faint);letter-spacing:.06em;margin-top:16px;line-height:1.8;}
 
-  /* ---------- 桌面端微调 ---------- */
   @media(min-width:860px){
     .appbar{padding-top:22px;}
     .content{padding-top:10px;}
@@ -175,7 +170,6 @@
 (function(){
   var DATA=[];
 
-  /* 自动归类规则（与本子同一套，纯函数） */
   function arcHas(t,kws){return kws.some(function(k){return t.indexOf(k)!==-1;});}
   function arcTheme(t){
     if(arcHas(t,['焦虑','情绪','失眠','哭','紧张','疲惫','累','心情','难过','害怕','恐惧','不安','疼','烦躁','烦','郁','痛苦','压力','迷茫','无助','悲伤','毛病','矛盾','后悔','恨','睡','梦','控制','裸奔','燥','抑郁','反复','发泄','身体','心跳','不愉快','想法']))return '身体';
@@ -202,7 +196,6 @@
     return ['日记'];
   }
 
-  /* 读取本子（localStorage）里的新内容，按正文去重后合并 */
   function loadNotebook(){
     var existing={};
     DATA.forEach(function(d){existing[d.text]=1;});
@@ -233,8 +226,6 @@
     }catch(e){}
     return extra;
   }
-  /* 读取本子同步数据（window.SYLVAN_SYNCED，由 synced-data.js 用 <script> 加载，
-     file:// 双击和 http 下都能读，绕开 file:// 的 fetch 限制），按正文去重后合并 */
   function cdateFrom(s){
     var m=(s||'').split('.');
     if(m.length!==3)return{iso:'',time:''};
@@ -260,10 +251,8 @@
     });
     return extra;
   }
-  /* 本地数据作为降级和首次迁移用 */
   var LOCAL_DATA=(window.ARCHIVE_DATA||[]).slice().concat(loadSynced()).concat(loadNotebook());
 
-  /* ===== 本地编辑系统：改动存 localStorage，不写原始数据 ===== */
   var EDIT_KEY='sylvan_archive_edits';
   function hashKey(s){
     var h=5381;
@@ -274,12 +263,11 @@
     try{return JSON.parse(localStorage.getItem(EDIT_KEY)||'{}');}catch(e){return {};}
   }
   function saveOverrides(ov){localStorage.setItem(EDIT_KEY,JSON.stringify(ov));}
-  // 原始快照（带稳定 key，不被修改）
   DATA.forEach(function(d){d._key=hashKey(d.text);});
   var RAW=DATA;
   function rebuild(){
     DATA=RAW.map(function(d){
-      return {date:d.date,time:d.time,source:d.source,text:d.text,tags:d.tags.slice(),_key:d._key,_id:d._id,images:d.images||[]};
+      return {date:d.date,time:d.time,source:d.source,text:d.text,tags:d.tags.slice(),_key:d._key,_id:d._id,images:d.images||[],_createdAt:d._createdAt||''};
     });
     var ov=getOverrides();
     DATA.forEach(function(d){
@@ -298,8 +286,7 @@
   var THEMES=['做自己','身体','他人','活着'];
   var DRAWERS=['还在想的事','身体的感觉','跟自己说的','和人有关的'];
   var state={view:'日记',theme:null,drawer:null,q:''};
-  // 管理员模式：URL 加 ?admin=你的密码 才能编辑删除
-  var ADMIN_PASSWORD='sylvan2026'; // 改这里设你的密码
+  var ADMIN_PASSWORD='sylvan2026';
   var isAdmin=new URLSearchParams(location.search).get('admin')===ADMIN_PASSWORD;
 
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
@@ -310,7 +297,8 @@
   }
   function sortDate(a){return a.slice().sort(function(x,y){
     if(!x.date&&!y.date)return 0;if(!x.date)return 1;if(!y.date)return -1;
-    return y.date.localeCompare(x.date);});}
+    if(x.date!==y.date)return y.date.localeCompare(x.date);
+    return (y._id||0)-(x._id||0);});}
   function currentItems(){
     var items;
     if(state.view==='思考'){
@@ -329,7 +317,6 @@
     return items;
   }
 
-  /* ---- 视图 tab ---- */
   var tabsEl=document.getElementById('tabs');
   VIEWS.forEach(function(v){
     var b=document.createElement('button');
@@ -350,7 +337,6 @@
     });
   }
 
-  /* ---- 思考筛选 ---- */
   var filtersEl=document.getElementById('filters');
   function makeRow(label,order,key){
     var r=document.createElement('div');r.className='filter-row';
@@ -373,21 +359,18 @@
     makeRow('抽屉',DRAWERS,'drawer');
   }
 
-  /* ---- 列表渲染 ---- */
   var entriesEl=document.getElementById('entries');
   var searchInfo=document.getElementById('searchInfo');
   var resetZone=document.getElementById('resetZone');
   function render(){
     updateTabCounts();
     var items=currentItems();
-    // 搜索结果计数
     if(state.q){
       searchInfo.style.display='block';
       searchInfo.textContent='找到 '+items.length+' 条';
     }else{
       searchInfo.style.display='none';
     }
-    // 有本地改动时才显示"恢复全部"
     resetZone.style.display=Object.keys(getOverrides()).length?'block':'none';
     if(!items.length){
       entriesEl.innerHTML='<div class="empty">'+(state.q?'没有找到包含"'+esc(searchInput.value)+'"的字':'这个方向暂时没有字')+'</div>';
@@ -396,11 +379,16 @@
     entriesEl.innerHTML=items.map(function(d){
       var meta=[];
       if(d.time)meta.push('<span>'+esc(d.time)+'</span>');
+      if(d._createdAt){
+        var dt=new Date(d._createdAt);
+        var hh=String(dt.getHours()).padStart(2,'0');
+        var mm=String(dt.getMinutes()).padStart(2,'0');
+        meta.push('<span>'+hh+':'+mm+'</span>');
+      }
       meta.push('<span>'+esc(d.source)+'</span>');
       if(state.view==='思考')meta.push('<span class="flow">'+esc(d.tags.join(' · '))+'</span>');
       if(d._edited)meta.push('<span class="edited-flag">已改</span>');
       if(isAdmin)meta.push('<button class="edit-btn" data-key="'+d._key+'">编辑</button>');
-      // 除了碎片和俳句，其他都加粗第一行
       var lines=d.text.split('\n');
       var noBold=['碎片','俳句'];
       var hasTitle=!noBold.some(function(t){return d.tags.indexOf(t)!==-1;});
@@ -411,7 +399,6 @@
       }else{
         txt='<div class="body">'+esc(d.text)+'</div>';
       }
-      // 渲染图片
       var imgs=(d.images||[]).map(function(src){
         return '<img class="entry-img" src="'+esc(src)+'" loading="lazy">';
       }).join('');
@@ -424,7 +411,6 @@
     });
   }
 
-  /* ---- 搜索 ---- */
   var searchInput=document.getElementById('search');
   var clearBtn=document.getElementById('clearBtn');
   searchInput.addEventListener('input',function(){
@@ -437,7 +423,6 @@
     render();searchInput.focus();
   });
 
-  /* ---- 编辑器交互 ---- */
   var overlay=document.getElementById('editOverlay');
   var ecArea=document.getElementById('ecArea');
   var ecDate=document.getElementById('ecDate');
@@ -534,7 +519,6 @@
     rebuild();renderFilters();render();
   });
 
-  /* 从 Supabase 加载；空的话自动迁移本地数据 */
   window.SUPA.load().then(function(rows){
     if(!rows.length){
       return window.SUPA.bulkInsert(LOCAL_DATA).then(function(){
@@ -544,7 +528,7 @@
     return rows;
   }).then(function(rows){
     DATA = rows.map(function(r){
-      return {date:r.date||'',time:r.time||'',source:r.source||'',text:r.text||'',tags:r.tags||['日记'],_id:r.id,images:r.images||[]};
+      return {date:r.date||'',time:r.time||'',source:r.source||'',text:r.text||'',tags:r.tags||['日记'],_id:r.id,images:r.images||[],_createdAt:r.created_at||''};
     });
     DATA.forEach(function(d){d._key=String(d._id||hashKey(d.text));});
     RAW=DATA.slice();
