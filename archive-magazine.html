@@ -377,18 +377,34 @@
   var searchInfo=document.getElementById('searchInfo');
   var resetZone=document.getElementById('resetZone');
   var statsBar=document.getElementById('statsBar');
+  var STOP=new Set(['的一','了我','是不','在他','这有','个们','上','来','到','时','大','地','为','子','中','说','去','会','着','看','好','自','己','这','那','和','就','不','人','都','一','个','上','也','很','还','但','与','或','把','被','让','从','向','于','等','着','过','吗','呢','吧','啊','呀','嘛','哦','嗯','嘛','之','其','以','及','而','且','然','则','若','如','因','为','所','以','于','至','关','于','对','关','通','过','关','于','现','在','曾','经','已','经','刚','才','正','在','将','要','想','要','应','该','可','以','能','够','必','须','得','须','需','要','喜','欢','觉','得','知','道','觉','得','发','现','认','为','以','为','看','来','听','说','据','说','比','如','例','如','例','如','比','较','相','比','相','对','绝','对','大','概','也','许','或','许','恐','怕','应','该','可','能','大','概','至','少','至','多','至','今','为','止','迄','今','为','止','总','之','综','上','所','述','换','言','之','换','句','说','换','句','话','也','就','是','说','也','即','是','说','换','句','说','也','就','是','说','也','即','是','说','我','你','他','她','它','我','们','你','们','他','们','她','们','它','们','自','己','别','人','大','家','人','家','谁','什','么','怎','么','为','什','么','为','何','如','何','怎','样','多','少','几','多','久','多','远','多','高','多','大','多','长','多','宽','哪','哪','里','哪','个','哪','些','这','里','那','里','这','个','那','个','这','些','那','些','这','么','那','么','这','样','那','样','这','种','那','种']);
+  function topWords(text, n){
+    var freq={};
+    var chinese=text.match(/[一-鿿]/g)||[];
+    for(var i=0;i<chinese.length-1;i++){
+      var bigram=chinese[i]+chinese[i+1];
+      if(STOP.has(bigram))continue;
+      freq[bigram]=(freq[bigram]||0)+1;
+    }
+    var arr=Object.keys(freq).map(function(k){return [k,freq[k]];});
+    arr.sort(function(a,b){return b[1]-a[1];});
+    return arr.slice(0,n).map(function(x){return x[0];});
+  }
   function computeStats(){
     var year=new Date().getFullYear();
-    var chars=0, days={};
+    var chars=0, days={}, allText='';
     DATA.forEach(function(d){
       if(d._deleted)return;
       if(d.date&&d.date.indexOf(year)!==0)return;
       chars+=(d.text||'').replace(/\s/g,'').length;
       if(d.date)days[d.date]=1;
+      allText+=(d.text||'');
     });
     var dayCount=Object.keys(days).length;
     var totalEntries=DATA.filter(function(d){return !d._deleted;}).length;
-    statsBar.innerHTML='今年写了 <b style="color:var(--ink)">'+chars+'</b> 字 · <b style="color:var(--ink)">'+dayCount+'</b> 天 · 共 <b style="color:var(--ink)">'+totalEntries+'</b> 条';
+    var top=topWords(allText,3);
+    statsBar.innerHTML='今年写了 <b style="color:var(--ink)">'+chars+'</b> 字 · <b style="color:var(--ink)">'+dayCount+'</b> 天 · 共 <b style="color:var(--ink)">'+totalEntries+'</b> 条'
+      +'<br>最爱词：<b style="color:var(--ink)">'+top.join('</b> · <b style="color:var(--ink)">')+'</b>';
   }
   function render(){
     computeStats();
