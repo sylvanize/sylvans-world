@@ -135,6 +135,8 @@
 
 <div class="filters wrap" id="filters"></div>
 
+<div class="wrap" id="statsBar" style="padding:18px 0 4px;font-size:11px;color:var(--faint);letter-spacing:.06em;line-height:2;"></div>
+
 <div class="wrap" id="searchInfo" style="display:none;padding-top:14px;font-size:11px;color:var(--faint);letter-spacing:.08em;"></div>
 
 <main class="content wrap" id="entries"></main>
@@ -374,7 +376,22 @@
   var entriesEl=document.getElementById('entries');
   var searchInfo=document.getElementById('searchInfo');
   var resetZone=document.getElementById('resetZone');
+  var statsBar=document.getElementById('statsBar');
+  function computeStats(){
+    var year=new Date().getFullYear();
+    var chars=0, days={};
+    DATA.forEach(function(d){
+      if(d._deleted)return;
+      if(d.date&&d.date.indexOf(year)!==0)return;
+      chars+=(d.text||'').replace(/\s/g,'').length;
+      if(d.date)days[d.date]=1;
+    });
+    var dayCount=Object.keys(days).length;
+    var totalEntries=DATA.filter(function(d){return !d._deleted;}).length;
+    statsBar.innerHTML='今年写了 <b style="color:var(--ink)">'+chars+'</b> 字 · <b style="color:var(--ink)">'+dayCount+'</b> 天 · 共 <b style="color:var(--ink)">'+totalEntries+'</b> 条';
+  }
   function render(){
+    computeStats();
     updateTabCounts();
     var items=currentItems();
     if(state.q){
