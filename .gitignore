@@ -1,0 +1,10 @@
+# 依赖目录（体积大，应由 npm 安装，不进版本库）
+node_modules/
+
+# macOS 系统垃圾
+.DS_Store
+**/.DS_Store
+
+# 日志与临时文件
+*.log
+npm-debug.log*
