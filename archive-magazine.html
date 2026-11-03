@@ -11,7 +11,7 @@
 <title>archive · sylvan's world</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --paper:#FFFFFF; --ink:#111111; --soft:#666666; --faint:#999999;
@@ -174,6 +174,22 @@
       <span id="ecCount" style="font-size:11px;color:var(--faint);letter-spacing:.08em;">0 字</span>
       <span class="ehint" style="margin:0;">改动只存在本机，可恢复</span>
     </div>
+  </div>
+</div>
+
+<div class="editor-overlay" id="exportOverlay">
+  <div class="ebar">
+    <button id="exCancel">关闭</button>
+    <button class="esave" id="exDownload">下载 PNG</button>
+  </div>
+  <div class="ebody" style="display:flex;flex-direction:column;align-items:center;gap:18px;">
+    <div style="display:flex;gap:10px;align-items:center;">
+      <span style="font-size:10px;letter-spacing:.15em;color:var(--faint);text-transform:uppercase;">配色</span>
+      <button class="cat-btn theme-btn on" data-theme="bw" style="width:36px;height:36px;border-radius:50%;background:#fff;border:2px solid #111;"></button>
+      <button class="cat-btn theme-btn" data-theme="paper" style="width:36px;height:36px;border-radius:50%;background:#f5f1e8;border:2px solid #ddd;"></button>
+      <button class="cat-btn theme-btn" data-theme="night" style="width:36px;height:36px;border-radius:50%;background:#111;border:2px solid #333;"></button>
+    </div>
+    <canvas id="exCanvas" width="1080" height="1440" style="max-width:100%;height:auto;border:1px solid #eee;"></canvas>
   </div>
 </div>
 
@@ -434,6 +450,7 @@
       if(state.view==='思考')meta.push('<span class="flow">'+esc(d.tags.join(' · '))+'</span>');
       if(d._edited)meta.push('<span class="edited-flag">已改</span>');
       if(isAdmin)meta.push('<button class="edit-btn" data-key="'+d._key+'">编辑</button>');
+      meta.push('<button class="edit-btn export-btn" data-key="'+d._key+'">导出</button>');
       var lines=d.text.split('\n');
       var noBold=['碎片','俳句'];
       var hasTitle=!noBold.some(function(t){return d.tags.indexOf(t)!==-1;});
@@ -453,6 +470,9 @@
     }).join('');
     entriesEl.querySelectorAll('.edit-btn').forEach(function(b){
       b.addEventListener('click',function(){openEditor(b.dataset.key);});
+    });
+    entriesEl.querySelectorAll('.export-btn').forEach(function(b){
+      b.addEventListener('click',function(){openExport(b.dataset.key);});
     });
   }
 
@@ -614,6 +634,196 @@
     state.q='';state.theme=null;state.drawer=null;
     searchInput.value='';clearBtn.classList.remove('show');
     rebuild();renderFilters();render();
+  });
+
+  var exOverlay=document.getElementById('exportOverlay');
+  var exCanvas=document.getElementById('exCanvas');
+  var exCtx=exCanvas.getContext('2d');
+  var exKey=null, exTheme='bw';
+  var penguinImg=new Image();
+  penguinImg.src='assets/penguin.png';
+  var penguinReady=false;
+  penguinImg.onload=function(){penguinReady=true;if(exKey)drawExport();};
+
+  var THEMES={
+    bw:{bg:'#ffffff',ink:'#111111',soft:'#999999',wm:'#c8c8c8'},
+    paper:{bg:'#f5f1e8',ink:'#2a2520',soft:'#a89f8f',wm:'#d8d0c0'},
+    night:{bg:'#111111',ink:'#f5f1e8',soft:'#777777',wm:'#333333'}
+  };
+
+  function wrapText(ctx,text,maxW){
+    var lines=[];
+    text.split('\n').forEach(function(para){
+      var cur='';
+      for(var i=0;i<para.length;i++){
+        var ch=para[i];
+        if(ctx.measureText(cur+ch).width>maxW){lines.push(cur);cur=ch;}
+        else cur+=ch;
+      }
+      if(cur)lines.push(cur);
+    });
+    return lines;
+  }
+
+  function drawExport(){
+    var d=currentEntry(exKey);
+    if(!d)return;
+    var T=THEMES[exTheme];
+    var W=1080,H=1440;
+    exCtx.fillStyle=T.bg;exCtx.fillRect(0,0,W,H);
+    exCtx.textAlign='left';
+    exCtx.textBaseline='alphabetic';
+
+    if(penguinReady){
+      exCtx.save();
+      exCtx.globalAlpha=0.15;
+      var pw=880,ph=880;
+      exCtx.drawImage(penguinImg,W/2-pw/2,H/2-ph/2-60,pw,ph);
+      exCtx.restore();
+    }
+
+    var M=60;
+
+    exCtx.strokeStyle=T.ink;exCtx.lineWidth=2;
+    exCtx.beginPath();exCtx.moveTo(M,70);exCtx.lineTo(W-M,70);exCtx.stroke();
+    exCtx.lineWidth=1;
+    exCtx.beginPath();exCtx.moveTo(M,76);exCtx.lineTo(W-M,76);exCtx.stroke();
+
+    exCtx.fillStyle=T.ink;
+    exCtx.font='bold 54px "Noto Serif CJK SC","Songti SC",serif';
+    var mast="SYLVAN'S WORLD";
+    exCtx.textAlign='center';
+    exCtx.fillText(mast,W/2,130);
+
+    exCtx.font='16px -apple-system,sans-serif';
+    exCtx.fillStyle=T.soft;
+    var dateStr=d.date?d.date.replace(/-/g,'.'):'';
+    var sub="VOL. 2026  ·  "+(dateStr||'NO. 2026');
+    exCtx.fillText(sub,W/2,160);
+
+    exCtx.strokeStyle=T.ink;exCtx.lineWidth=1;
+    exCtx.beginPath();exCtx.moveTo(M,180);exCtx.lineTo(W-M,180);exCtx.stroke();
+
+    exCtx.font='15px -apple-system,sans-serif';
+    exCtx.fillStyle=T.soft;
+    var cat='日记';
+    if(d.tags&&d.tags.length){
+      var solo=d.tags.filter(function(t){return ['日记','回忆','随笔','俳句','碎片'].indexOf(t)!==-1;});
+      cat=solo[0]||'思考';
+    }
+    exCtx.textAlign='left';
+    exCtx.fillText(cat.toUpperCase()+'  ·  '+cat,M,210);
+    exCtx.textAlign='right';
+    exCtx.fillText('Page 1',W-M,210);
+
+    var allText=(d.text||'').split('\n');
+    var title=allText[0]||'';
+    var body=allText.slice(1).join('\n');
+
+    var y=270;
+    exCtx.fillStyle=T.ink;
+    var titleSize=64;
+    exCtx.font='bold '+titleSize+'px "Noto Serif CJK SC","Songti SC",serif';
+    var titleLines=wrapText(exCtx,title,W-M*2);
+    titleLines.forEach(function(l){
+      exCtx.fillText(l,M,y);
+      y+=titleSize*1.15;
+    });
+
+    y+=10;
+    exCtx.font='15px -apple-system,sans-serif';
+    exCtx.fillStyle=T.soft;
+    exCtx.textAlign='left';
+    exCtx.fillText('REPORTED BY SYLVAN',M,y);
+    y+=20;
+
+    exCtx.strokeStyle=T.ink;exCtx.lineWidth=1;
+    exCtx.beginPath();exCtx.moveTo(M,y);exCtx.lineTo(W-M,y);exCtx.stroke();
+    y+=36;
+
+    exCtx.font='20px "Noto Serif CJK SC","Songti SC",serif';
+    exCtx.fillStyle=T.ink;
+    var colW=(W-M*2-30)/2;
+    var bodyLines=wrapText(exCtx,body||'',colW);
+    var useTwoCol=bodyLines.length>10;
+    var lh=32;
+    if(useTwoCol){
+      var mid=Math.ceil(bodyLines.length/2);
+      var col1=bodyLines.slice(0,mid);
+      var col2=bodyLines.slice(mid);
+      var y1=y;
+      col1.forEach(function(l){exCtx.fillText(l,M,y1);y1+=lh;});
+      var y2=y;
+      col2.forEach(function(l){exCtx.fillText(l,M+colW+30,y2);y2+=lh;});
+      var lineH=Math.min(y1,y2)-y-10;
+      exCtx.strokeStyle=T.soft;exCtx.lineWidth=1;
+      exCtx.beginPath();
+      exCtx.moveTo(M+colW+15,y);
+      exCtx.lineTo(M+colW+15,y+lineH);
+      exCtx.stroke();
+      y=Math.max(y1,y2)+20;
+    }else{
+      bodyLines.forEach(function(l){exCtx.fillText(l,M,y);y+=lh;});
+      y+=20;
+    }
+
+    var images=d.images||[];
+    images.forEach(function(src,idx){
+      if(y>H-380)return;
+      var boxW=300,boxH=220;
+      var boxX=W-M-boxW;
+      var boxY=y;
+      exCtx.fillStyle=T.bg;
+      exCtx.fillRect(boxX,boxY,boxW,boxH);
+      exCtx.strokeStyle=T.ink;exCtx.lineWidth=1;
+      exCtx.strokeRect(boxX,boxY,boxW,boxH);
+      (function(sx,sy,sw,sh,cap){
+        var img=new Image();
+        img.crossOrigin='anonymous';
+        img.onload=function(){
+          var ratio=Math.min((sw-20)/img.width,(sh-40)/img.height);
+          var dw=img.width*ratio,dh=img.height*ratio;
+          exCtx.drawImage(img,sx+(sw-dw)/2,sy+10+(sh-50-dh)/2,dw,dh);
+          exCtx.font='13px -apple-system,sans-serif';
+          exCtx.fillStyle=T.soft;
+          exCtx.textAlign='left';
+          exCtx.fillText(cap,sx+10,sy+sh-14);
+        };
+        img.src=sx;
+      })(src,boxY,boxW,boxH,'FIG. '+(idx+1)+' — SYLVAN ARCHIVE');
+      y+=boxH+20;
+    });
+
+    exCtx.strokeStyle=T.ink;exCtx.lineWidth=1;
+    exCtx.beginPath();exCtx.moveTo(M,H-80);exCtx.lineTo(W-M,H-80);exCtx.stroke();
+
+    if(penguinReady){
+      exCtx.drawImage(penguinImg,M,H-60,24,24);
+    }
+    exCtx.font='14px -apple-system,sans-serif';
+    exCtx.fillStyle=T.soft;
+    exCtx.textAlign='left';
+    exCtx.fillText("sylvan's world",M+34,H-42);
+  }
+
+  function openExport(key){
+    exKey=key;exOverlay.classList.add('open');
+    setTimeout(drawExport,100);
+  }
+  document.getElementById('exCancel').addEventListener('click',function(){exOverlay.classList.remove('open');});
+  document.getElementById('exDownload').addEventListener('click',function(){
+    var a=document.createElement('a');
+    a.download='sylvan-'+(exKey||'card')+'.png';
+    a.href=exCanvas.toDataURL('image/png');
+    a.click();
+  });
+  document.querySelectorAll('.theme-btn').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.theme-btn').forEach(function(x){x.classList.remove('on');});
+      b.classList.add('on');
+      exTheme=b.dataset.theme;
+      drawExport();
+    });
   });
 
   window.SUPA.load().then(function(rows){
