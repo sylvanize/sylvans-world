@@ -103,6 +103,8 @@
   .editor-overlay textarea{width:100%;border:none;outline:none;resize:none;background:transparent;
     font-family:inherit;font-size:15px;line-height:1.85;color:var(--ink);min-height:60vh;}
   .editor-overlay .ehint{font-size:11px;color:var(--faint);letter-spacing:.06em;margin-top:16px;line-height:1.8;}
+  .cat-btn{border:1px solid #ddd;background:#fff;border-radius:16px;padding:6px 14px;font-family:inherit;font-size:13px;color:#666;cursor:pointer;min-height:32px;}
+  .cat-btn.on{background:#111;color:#fff;border-color:#111;}
 
   @media(min-width:860px){
     .appbar{padding-top:22px;}
@@ -154,6 +156,16 @@
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
       <span style="font-size:10px;letter-spacing:.15em;color:var(--faint);text-transform:uppercase;">日期</span>
       <input id="ecDate" type="date" style="border:1px solid #ddd;border-radius:6px;padding:6px 10px;font-family:inherit;font-size:13px;outline:none;">
+    </div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:10px;letter-spacing:.15em;color:var(--faint);text-transform:uppercase;margin-bottom:8px;">分区</div>
+      <div id="ecCats" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      <div id="ecSubs" style="display:none;margin-top:10px;">
+        <div style="font-size:10px;letter-spacing:.12em;color:var(--faint);text-transform:uppercase;margin-bottom:6px;">主题</div>
+        <div id="ecThemes" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
+        <div style="font-size:10px;letter-spacing:.12em;color:var(--faint);text-transform:uppercase;margin-bottom:6px;">抽屉</div>
+        <div id="ecDrawers" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      </div>
     </div>
     <textarea id="ecArea" spellcheck="false"></textarea>
     <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -428,7 +440,39 @@
   var ecDate=document.getElementById('ecDate');
   var ecRestore=document.getElementById('ecRestore');
   var ecCount=document.getElementById('ecCount');
+  var ecCats=document.getElementById('ecCats');
+  var ecSubs=document.getElementById('ecSubs');
+  var ecThemes=document.getElementById('ecThemes');
+  var ecDrawers=document.getElementById('ecDrawers');
   var editingKey=null;
+
+  var SOLO_CATS=['日记','回忆','随笔','俳句','碎片'];
+  var curCat='日记', curTheme='做自己', curDrawer='还在想的事';
+
+  function buildCatBtns(){
+    ecCats.innerHTML='';
+    SOLO_CATS.concat(['思考']).forEach(function(c){
+      var b=document.createElement('button');
+      b.className='cat-btn'+(curCat===c?' on':'');
+      b.textContent=c;
+      b.onclick=function(){
+        curCat=c;
+        buildCatBtns();
+        ecSubs.style.display=(c==='思考')?'block':'none';
+      };
+      ecCats.appendChild(b);
+    });
+  }
+  function buildSubBtns(container,arr,cur,setter){
+    container.innerHTML='';
+    arr.forEach(function(name){
+      var b=document.createElement('button');
+      b.className='cat-btn'+(cur===name?' on':'');
+      b.textContent=name;
+      b.onclick=function(){setter(name);buildSubBtns(container,arr,cur===name?null:name,setter);};
+      container.appendChild(b);
+    });
+  }
 
   function currentEntry(key){
     for(var i=0;i<DATA.length;i++)if(DATA[i]._key===key)return DATA[i];
@@ -453,6 +497,20 @@
     ecArea.value=d.text;
     ecDate.value=fmtDate(d.date)||fmtDate(d.time);
     ecRestore.style.display=d._edited?'block':'none';
+    var tags=d.tags||['日记'];
+    var solo=tags.filter(function(t){return SOLO_CATS.indexOf(t)!==-1;});
+    if(solo.length){
+      curCat=solo[0];
+      ecSubs.style.display='none';
+    }else{
+      curCat='思考';
+      ecSubs.style.display='block';
+      curTheme=tags.find(function(t){return THEMES.indexOf(t)!==-1;})||'做自己';
+      curDrawer=tags.find(function(t){return DRAWERS.indexOf(t)!==-1;})||'还在想的事';
+    }
+    buildCatBtns();
+    buildSubBtns(ecThemes,THEMES,curTheme,function(v){curTheme=v;});
+    buildSubBtns(ecDrawers,DRAWERS,curDrawer,function(v){curDrawer=v;});
     overlay.classList.add('open');
     updateCount();
     setTimeout(function(){ecArea.focus();},250);
@@ -471,17 +529,23 @@
     var d=currentEntry(editingKey);
     var newDate=ecDate.value||'';
     var newTime=fmtTime(newDate);
+    var newTags;
+    if(curCat==='思考'){
+      newTags=[curTheme,curDrawer];
+    }else{
+      newTags=[curCat];
+    }
     if(d&&d._id){
-      var patch={text:txt};
+      var patch={text:txt,tags:newTags};
       if(newDate){patch.date=newDate;patch.time=newTime;}
       window.SUPA.update(d._id,patch).then(function(){
-        for(var i=0;i<RAW.length;i++){if(RAW[i]._id===d._id){RAW[i].text=txt;if(newDate){RAW[i].date=newDate;RAW[i].time=newTime;}break;}}
+        for(var i=0;i<RAW.length;i++){if(RAW[i]._id===d._id){RAW[i].text=txt;RAW[i].tags=newTags;if(newDate){RAW[i].date=newDate;RAW[i].time=newTime;}break;}}
         rebuild();render();closeEditor();
       }).catch(function(e){alert('保存失败：'+e.message);});
     }else{
       var ov=getOverrides();
       var prev=ov[editingKey]||{};
-      ov[editingKey]={text:txt,deleted:!!prev.deleted,date:newDate||prev.date,time:newTime||prev.time};
+      ov[editingKey]={text:txt,deleted:!!prev.deleted,tags:newTags,date:newDate||prev.date,time:newTime||prev.time};
       saveOverrides(ov);
       rebuild();render();closeEditor();
     }
