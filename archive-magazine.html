@@ -109,6 +109,31 @@
   .editor-overlay .ehint{font-size:11px;color:var(--faint);letter-spacing:.06em;margin-top:16px;line-height:1.8;}
   .cat-btn{border:1px solid #ddd;background:#fff;border-radius:16px;padding:6px 14px;font-family:inherit;font-size:13px;color:#666;cursor:pointer;min-height:32px;}
   .cat-btn.on{background:#111;color:#fff;border-color:#111;}
+  /* 居中模态卡片（查看博文 & 首次欢迎） */
+  .modal-overlay{position:fixed;inset:0;z-index:120;background:rgba(17,17,17,.44);
+    display:flex;align-items:center;justify-content:center;padding:26px;
+    opacity:0;visibility:hidden;transition:opacity .25s ease;}
+  .modal-overlay.open{opacity:1;visibility:visible;}
+  .vcard{background:#fff;border-radius:18px;max-width:560px;width:100%;max-height:82vh;
+    overflow-y:auto;padding:30px 26px 26px;position:relative;-webkit-overflow-scrolling:touch;
+    transform:translateY(12px) scale(.98);transition:transform .25s ease;}
+  .modal-overlay.open .vcard{transform:none;}
+  .vcard .vclose{position:absolute;top:8px;right:10px;background:none;border:none;
+    font-size:20px;line-height:1;color:#999;min-width:44px;min-height:44px;cursor:pointer;}
+  .vcard .vtitle{font-family:'PFHanTu',serif;font-size:21px;font-weight:700;line-height:1.5;
+    color:#111;margin-bottom:12px;}
+  .vcard .vbody{font-family:'Noto Serif SC',serif;font-size:15px;line-height:1.95;
+    color:#222;white-space:pre-wrap;word-break:break-word;}
+  .vcard .vimg{width:100%;border-radius:12px;margin:14px 0;display:block;}
+  .vcard .vmeta{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);
+    font-size:11px;color:var(--faint);letter-spacing:.08em;line-height:1.8;}
+  /* 首次欢迎卡片 */
+  .welcome-card{text-align:center;padding:44px 30px 36px;max-width:440px;}
+  .welcome-card .wline{font-family:'Playfair Display','Noto Serif SC',serif;font-style:italic;
+    font-size:22px;line-height:1.7;color:#111;}
+  .welcome-card .wsub{margin-top:20px;font-size:11px;letter-spacing:.16em;color:var(--faint);text-transform:uppercase;}
+  .welcome-card .wbtn{margin-top:28px;background:#111;color:#fff;border:none;border-radius:24px;
+    font-family:inherit;font-size:13px;letter-spacing:.1em;padding:11px 34px;min-height:44px;cursor:pointer;}
   @media(min-width:860px){
     .appbar{padding-top:22px;}
     .content{padding-top:10px;}
@@ -172,6 +197,21 @@
       <span id="ecCount" style="font-size:11px;color:var(--faint);letter-spacing:.08em;">0 字</span>
       <span class="ehint" style="margin:0;">改动只存在本机，可恢复</span>
     </div>
+  </div>
+</div>
+<!-- 点开博文：居中卡片 -->
+<div class="modal-overlay" id="viewOverlay">
+  <div class="vcard" id="viewCard">
+    <button class="vclose" id="viewClose" aria-label="关闭">✕</button>
+    <div id="viewContent"></div>
+  </div>
+</div>
+<!-- 首次进入：心意卡片 -->
+<div class="modal-overlay" id="welcomeOverlay">
+  <div class="vcard welcome-card">
+    <div class="wline">cause i need you more than you need me</div>
+    <div class="wsub">sylvan's world</div>
+    <button class="wbtn" id="welcomeClose">进入</button>
   </div>
 </div>
 <script src="js/archive-data.js"></script>
@@ -434,12 +474,15 @@
       var imgs=(d.images||[]).map(function(src){
         return '<img class="entry-img" src="'+esc(src)+'" loading="lazy">';
       }).join('');
-      return '<div class="entry">'+txt+
+      return '<div class="entry" data-key="'+d._key+'">'+txt+
              (imgs?'<div class="imgs">'+imgs+'</div>':'')+
              '<div class="meta">'+meta.join('')+'</div></div>';
     }).join('');
     entriesEl.querySelectorAll('.edit-btn').forEach(function(b){
-      b.addEventListener('click',function(){openEditor(b.dataset.key);});
+      b.addEventListener('click',function(ev){ev.stopPropagation();openEditor(b.dataset.key);});
+    });
+    entriesEl.querySelectorAll('.entry').forEach(function(en){
+      en.addEventListener('click',function(){openView(en.dataset.key);});
     });
   }
   var searchInput=document.getElementById('search');
@@ -531,6 +574,48 @@
     setTimeout(function(){ecArea.focus();},250);
   }
   function closeEditor(){overlay.classList.remove('open');editingKey=null;}
+
+  /* 点开博文：居中卡片展示完整内容 */
+  var viewOverlay=document.getElementById('viewOverlay');
+  var viewContent=document.getElementById('viewContent');
+  function openView(key){
+    var d=currentEntry(key);
+    if(!d)return;
+    var lines=d.text.split('\n');
+    var noBold=['碎片','俳句'];
+    var hasTitle=!noBold.some(function(t){return d.tags.indexOf(t)!==-1;});
+    var html='';
+    if(hasTitle&&lines[0]){
+      html+='<div class="vtitle">'+esc(lines[0])+'</div>';
+      if(lines.length>1)html+='<div class="vbody">'+esc(lines.slice(1).join('\n'))+'</div>';
+    }else{
+      html+='<div class="vbody">'+esc(d.text)+'</div>';
+    }
+    (d.images||[]).forEach(function(src){html+='<img class="vimg" src="'+esc(src)+'">';});
+    var meta=[];
+    if(d.time)meta.push(esc(d.time));
+    if(d.source)meta.push(esc(d.source));
+    html+='<div class="vmeta">'+meta.join(' · ')+'</div>';
+    viewContent.innerHTML=html;
+    viewOverlay.classList.add('open');
+  }
+  function closeView(){viewOverlay.classList.remove('open');}
+  document.getElementById('viewClose').addEventListener('click',closeView);
+  viewOverlay.addEventListener('click',function(ev){if(ev.target===viewOverlay)closeView();});
+
+  /* 首次进入：心意卡片，每个设备首次访问弹一次，关闭后记住 */
+  var welcomeOverlay=document.getElementById('welcomeOverlay');
+  function closeWelcome(){
+    welcomeOverlay.classList.remove('open');
+    try{localStorage.setItem('sylvan_welcome_seen','1');}catch(e){}
+  }
+  document.getElementById('welcomeClose').addEventListener('click',closeWelcome);
+  welcomeOverlay.addEventListener('click',function(ev){if(ev.target===welcomeOverlay)closeWelcome();});
+  function maybeWelcome(){
+    var seen=false;
+    try{seen=!!localStorage.getItem('sylvan_welcome_seen');}catch(e){}
+    if(!seen)welcomeOverlay.classList.add('open');
+  }
   function updateCount(){
     if(ecCount)ecCount.textContent=ecArea.value.length+' 字';
   }
@@ -605,13 +690,13 @@
     });
     DATA.forEach(function(d){d._key=String(d._id||hashKey(d.text));});
     RAW=DATA.slice();
-    rebuild();renderFilters();render();
+    rebuild();renderFilters();render();maybeWelcome();
   }).catch(function(e){
     alert('云端连接失败，使用本地数据：'+e.message);
     DATA=LOCAL_DATA.slice();
     DATA.forEach(function(d){d._key=hashKey(d.text);});
     RAW=DATA;
-    rebuild();renderFilters();render();
+    rebuild();renderFilters();render();maybeWelcome();
   });
 })();
 </script>
