@@ -92,6 +92,9 @@
     color:var(--faint);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
     padding:8px 0;min-height:36px;}
   .edited-flag{color:var(--ink);}
+  .hide-btn{background:#fff;border:1px solid var(--line);border-radius:14px;color:var(--soft);
+    font-family:inherit;font-size:12px;letter-spacing:.08em;padding:8px 16px;min-height:36px;cursor:pointer;}
+  .hide-btn.on{background:#111;color:#fff;border-color:#111;}
   .editor-overlay{position:fixed;inset:0;z-index:100;background:var(--paper);
     display:flex;flex-direction:column;
     transform:translateY(100%);transition:transform .28s ease;
@@ -213,6 +216,9 @@
       </div>
     </div>
     <textarea id="ecArea" spellcheck="false"></textarea>
+    <div style="margin-top:14px;">
+      <button id="ecHide" class="hide-btn" type="button">隐藏本条</button>
+    </div>
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <span id="ecCount" style="font-size:11px;color:var(--faint);letter-spacing:.08em;">0 字</span>
       <span class="ehint" style="margin:0;">改动只存在本机，可恢复</span>
@@ -340,8 +346,19 @@
     return h.toString(36);
   }
   /* 纯发泄、未经思考的尖锐情绪（按文本hash），默认收起 */
-  var HIDDEN_HASHES=["1gimc57","1fp4mme","1o9v160","1akthj","1bahz2h","1axxprv","1i9q9n","1bt1xpu","hfq1cm","1tchxtq","3fkd5f","ujmn67","3778u1","1gufnt4","n2aos1","16fsltr","8gs8k6","3oxxy1","1pdil81","43nmu","1duue38","xok4yu","1q634yc","1nog6g","1i446tk","17lx2oa","199luvd","6bxk9","1l3fgb1","1wt9coj","30ci4h","5gixjw","1mzsome","1cjsd9z","7407pw","jczn0o","4yz5o","1rgyrho","iy8j2p","198x3ti","1vzw5iq","1j7kd60","xkpr9c","1nn9086","d8k7on","kshy5w","uiyxyo","3pu1o5","25g65q"];
+  var HIDDEN_HASHES=["1gimc57","1fp4mme","1o9v160","1akthj","1bahz2h","1axxprv","1i9q9n","1bt1xpu","hfq1cm","1tchxtq","3fkd5f","ujmn67","3778u1","1gufnt4","n2aos1","16fsltr","8gs8k6","3oxxy1","1pdil81","43nmu","1duue38","xok4yu","1q634yc","1nog6g","1i446tk","17lx2oa","199luvd","6bxk9","1l3fgb1","1wt9coj","30ci4h","5gixjw","1mzsome","1cjsd9z","7407pw","jczn0o","4yz5o","1rgyrho","iy8j2p","198x3ti","1vzw5iq","1j7kd60","xkpr9c","1nn9086","d8k7on","kshy5w","uiyxyo","3pu1o5","25g65q","1la82fm","3yhld","4exzsa","1xww9lm","1x9uivm","1h9ce6w","r8w0qm","jp1puv","3yf60","iy1x0n"];
   var softOn=(function(){try{return localStorage.getItem('sylvan_soft_filter')!=='0';}catch(e){return true;}})();
+  var CUSTOM_HIDDEN_KEY='sylvan_hidden_hashes';
+  function getCustomHidden(){
+    try{return JSON.parse(localStorage.getItem(CUSTOM_HIDDEN_KEY)||'[]');}catch(e){return [];}
+  }
+  function saveCustomHidden(a){
+    try{localStorage.setItem(CUSTOM_HIDDEN_KEY,JSON.stringify(a));}catch(e){}
+  }
+  function isHiddenText(text){
+    var h=hashKey(text);
+    return HIDDEN_HASHES.indexOf(h)!==-1 || getCustomHidden().indexOf(h)!==-1;
+  }
   function getOverrides(){
     try{return JSON.parse(localStorage.getItem(EDIT_KEY)||'{}');}catch(e){return {};}
   }
@@ -350,7 +367,7 @@
   var RAW=DATA;
   function rebuild(){
     DATA=RAW.map(function(d){
-      return {date:d.date,time:d.time,source:d.source,text:d.text,tags:d.tags.slice(),_key:d._key,_id:d._id,images:d.images||[],_createdAt:d._createdAt||'',_hidden:HIDDEN_HASHES.indexOf(hashKey(d.text))!==-1};
+      return {date:d.date,time:d.time,source:d.source,text:d.text,tags:d.tags.slice(),_key:d._key,_id:d._id,images:d.images||[],_createdAt:d._createdAt||'',_hidden:isHiddenText(d.text)};
     });
     var ov=getOverrides();
     DATA.forEach(function(d){
@@ -552,6 +569,7 @@
   var ecSubs=document.getElementById('ecSubs');
   var ecThemes=document.getElementById('ecThemes');
   var ecDrawers=document.getElementById('ecDrawers');
+  var ecHide=document.getElementById('ecHide');
   var editingKey=null;
   var SOLO_CATS=['日记','回忆','随笔','俳句','碎片'];
   var curCat='日记', curTheme='做自己', curDrawer='还在想的事';
@@ -616,11 +634,27 @@
     buildCatBtns();
     buildSubBtns(ecThemes,THEMES,curTheme,function(v){curTheme=v;});
     buildSubBtns(ecDrawers,DRAWERS,curDrawer,function(v){curDrawer=v;});
+    ecHide.classList.toggle('on',!!d._hidden);
+    ecHide.textContent=d._hidden?'取消隐藏':'隐藏本条';
     overlay.classList.add('open');
     updateCount();
     setTimeout(function(){ecArea.focus();},250);
   }
   function closeEditor(){overlay.classList.remove('open');editingKey=null;}
+  ecHide.addEventListener('click',function(){
+    var d=currentEntry(editingKey);
+    if(!d)return;
+    var h=hashKey(d.text);
+    var custom=getCustomHidden();
+    var idx=custom.indexOf(h);
+    if(idx!==-1){custom.splice(idx,1);}else{custom.push(h);}
+    saveCustomHidden(custom);
+    rebuild();render();
+    var cur=currentEntry(editingKey);
+    var hiddenNow=cur&&cur._hidden;
+    ecHide.classList.toggle('on',!!hiddenNow);
+    ecHide.textContent=hiddenNow?'取消隐藏':'隐藏本条';
+  });
 
   /* 点开博文：居中卡片展示完整内容 */
   var viewOverlay=document.getElementById('viewOverlay');
@@ -763,3 +797,4 @@
 </script>
 </body>
 </html>
+
