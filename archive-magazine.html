@@ -138,18 +138,6 @@
   .vcard .vimg{width:100%;border-radius:12px;margin:14px 0;display:block;}
   .vcard .vmeta{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);
     font-size:11px;color:var(--faint);letter-spacing:.08em;line-height:1.8;}
-  /* 首次欢迎卡片 */
-  .welcome-card{text-align:center;padding:38px 28px 32px;max-width:460px;}
-  .welcome-card .wstep{width:100%;}
-  .welcome-card .wletter{font-family:'PFHanTu',serif;text-align:left;font-size:15.5px;
-    line-height:1.95;color:#1a1a1a;word-break:break-word;}
-  .welcome-card .wletter p{margin:0 0 15px;}
-  .welcome-card .wletter p:last-child{margin-bottom:0;}
-  .welcome-card .wline{font-family:'PFHanTu',serif;
-    font-size:23px;line-height:1.75;color:#111;letter-spacing:.01em;}
-  .welcome-card .wsub{margin-top:20px;font-size:11px;letter-spacing:.16em;color:var(--faint);text-transform:uppercase;}
-  .welcome-card .wbtn{margin-top:28px;background:#111;color:#fff;border:none;border-radius:24px;
-    font-family:inherit;font-size:13px;letter-spacing:.1em;padding:11px 34px;min-height:44px;cursor:pointer;}
   /* 尖锐情绪过滤开关（放在标题旁） */
   .soft-toggle{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;
     padding:0;background:transparent;border:none;cursor:pointer;}
@@ -237,26 +225,6 @@
   <div class="vcard" id="viewCard">
     <button class="vclose" id="viewClose" aria-label="关闭">✕</button>
     <div id="viewContent"></div>
-  </div>
-</div>
-<!-- 首次进入：心意卡片 -->
-<div class="modal-overlay" id="welcomeOverlay">
-  <div class="vcard welcome-card">
-    <!-- 第一步：信 -->
-    <div class="wstep" id="stepLetter">
-      <div class="wletter">
-        <p>黄芝淋，我很清楚，我的生活里有没有你，都能好好过下去。联不联系你，我都可以快活、自由的生活。我反反复复的找你又找你，是因为我真的喜欢你。</p>
-        <p>我有点怕我这样的表达，会让你觉得沉重。请别这么想哇，我只是不太会说话。我给出去的一切，从来没有想过要你回应。虽然这个念头偶尔会被焦急盖住，我的嘴巴可能有时候会说出掩盖我本意的话，但它一直都是在我心里的，是真的。</p>
-        <p>如果你点开了这里，我想最后一次发出邀请：等你看完，如果心里也有一点想联系我的念头，就联系我吧～</p>
-      </div>
-      <button class="wbtn" id="toEnglish">继续</button>
-    </div>
-    <!-- 第二步：英文 -->
-    <div class="wstep" id="stepEnglish" style="display:none;">
-      <div class="wline">cause i need you more than you need me!!!</div>
-      <div class="wsub">sylvan's world</div>
-      <button class="wbtn" id="welcomeClose">进入</button>
-    </div>
   </div>
 </div>
 <script src="js/archive-data.js"></script>
@@ -730,33 +698,6 @@
   document.getElementById('viewClose').addEventListener('click',closeView);
   viewOverlay.addEventListener('click',function(ev){if(ev.target===viewOverlay)closeView();});
 
-  /* 前三次访问：两步欢迎流程（先信，再英文），完成后计数，满3次不再弹 */
-  var welcomeOverlay=document.getElementById('welcomeOverlay');
-  var stepLetter=document.getElementById('stepLetter');
-  var stepEnglish=document.getElementById('stepEnglish');
-  function showStep(which){
-    stepLetter.style.display=(which==='letter')?'block':'none';
-    stepEnglish.style.display=(which==='english')?'block':'none';
-  }
-  function finishWelcome(){
-    welcomeOverlay.classList.remove('open');
-    try{
-      var n=parseInt(localStorage.getItem('sylvan_welcome_count')||'0',10);
-      if(!(n>=0))n=0;
-      localStorage.setItem('sylvan_welcome_count',String(n+1));
-    }catch(e){}
-  }
-  document.getElementById('toEnglish').addEventListener('click',function(){showStep('english');});
-  document.getElementById('welcomeClose').addEventListener('click',finishWelcome);
-  welcomeOverlay.addEventListener('click',function(ev){
-    if(ev.target!==welcomeOverlay)return;
-    if(stepEnglish.style.display==='none')showStep('english');else finishWelcome();
-  });
-  function maybeWelcome(){
-    var n=0;
-    try{n=parseInt(localStorage.getItem('sylvan_welcome_count')||'0',10)||0;}catch(e){n=0;}
-    if(n<3){showStep('letter');welcomeOverlay.classList.add('open');}
-  }
   function updateCount(){
     if(ecCount)ecCount.textContent=ecArea.value.length+' 字';
   }
@@ -834,13 +775,13 @@
     return syncHiddenToCloud().catch(function(){return null;});
   }).then(function(){
     RAW=DATA.slice();
-    rebuild();renderFilters();render();maybeWelcome();
+    rebuild();renderFilters();render();
   }).catch(function(e){
     alert('云端连接失败，使用本地数据：'+e.message);
     DATA=LOCAL_DATA.slice();
     DATA.forEach(function(d){d._key=hashKey(d.text);});
     RAW=DATA;
-    rebuild();renderFilters();render();maybeWelcome();
+    rebuild();renderFilters();render();
   });
 })();
 </script>
