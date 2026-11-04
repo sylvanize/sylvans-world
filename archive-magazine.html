@@ -129,11 +129,22 @@
     font-size:11px;color:var(--faint);letter-spacing:.08em;line-height:1.8;}
   /* 首次欢迎卡片 */
   .welcome-card{text-align:center;padding:44px 30px 36px;max-width:440px;}
-  .welcome-card .wline{font-family:'Playfair Display','Noto Serif SC',serif;font-style:italic;
-    font-size:22px;line-height:1.7;color:#111;}
+  .welcome-card .wline{font-family:'PFHanTu',serif;
+    font-size:25px;line-height:1.75;color:#111;letter-spacing:.01em;}
   .welcome-card .wsub{margin-top:20px;font-size:11px;letter-spacing:.16em;color:var(--faint);text-transform:uppercase;}
   .welcome-card .wbtn{margin-top:28px;background:#111;color:#fff;border:none;border-radius:24px;
     font-family:inherit;font-size:13px;letter-spacing:.1em;padding:11px 34px;min-height:44px;cursor:pointer;}
+  /* 尖锐情绪过滤开关 */
+  .soft-row{display:flex;justify-content:flex-end;margin-top:12px;}
+  .soft-toggle{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:0 14px;
+    border:1px solid #ddd;border-radius:20px;background:#fff;font-family:inherit;font-size:12px;
+    letter-spacing:.05em;color:#666;cursor:pointer;transition:all .2s ease;}
+  .soft-toggle .sw{width:30px;height:18px;border-radius:10px;background:#ddd;position:relative;transition:background .2s ease;flex-shrink:0;}
+  .soft-toggle .sw::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s ease;}
+  .soft-toggle.on{background:#111;border-color:#111;color:#fff;}
+  .soft-toggle.on .sw{background:#555;}
+  .soft-toggle.on .sw::after{transform:translateX(12px);}
   @media(min-width:860px){
     .appbar{padding-top:22px;}
     .content{padding-top:10px;}
@@ -155,6 +166,11 @@
       <span class="mag">⌕</span>
       <input type="search" id="search" placeholder="搜索当前视图…" autocomplete="off">
       <button class="clear-btn" id="clearBtn" aria-label="清除">✕</button>
+    </div>
+    <div class="soft-row">
+      <button class="soft-toggle on" id="softToggle" aria-pressed="true">
+        <span class="sw"></span><span id="softLabel">收起尖锐情绪</span>
+      </button>
     </div>
     <nav class="tabs" id="tabs"></nav>
   </div>
@@ -307,6 +323,9 @@
     for(var i=0;i<s.length;i++){h=((h<<5)+h+s.charCodeAt(i))>>>0;}
     return h.toString(36);
   }
+  /* 纯发泄、未经思考的尖锐情绪（按文本hash），默认收起 */
+  var HIDDEN_HASHES=["1gimc57","1fp4mme","1o9v160","1akthj","1bahz2h","1axxprv","1i9q9n","1bt1xpu","hfq1cm","1tchxtq","3fkd5f","ujmn67","3778u1","1gufnt4","n2aos1","16fsltr","8gs8k6","3oxxy1","1pdil81","43nmu","1duue38","xok4yu","1q634yc","1nog6g","1i446tk","17lx2oa","199luvd","6bxk9","1l3fgb1","1wt9coj","30ci4h","5gixjw","1mzsome","1cjsd9z","7407pw","jczn0o","4yz5o","1rgyrho","iy8j2p","198x3ti","1vzw5iq","1j7kd60","xkpr9c","1nn9086","d8k7on","kshy5w","uiyxyo","3pu1o5","25g65q"];
+  var softOn=(function(){try{return localStorage.getItem('sylvan_soft_filter')!=='0';}catch(e){return true;}})();
   function getOverrides(){
     try{return JSON.parse(localStorage.getItem(EDIT_KEY)||'{}');}catch(e){return {};}
   }
@@ -315,7 +334,7 @@
   var RAW=DATA;
   function rebuild(){
     DATA=RAW.map(function(d){
-      return {date:d.date,time:d.time,source:d.source,text:d.text,tags:d.tags.slice(),_key:d._key,_id:d._id,images:d.images||[],_createdAt:d._createdAt||''};
+      return {date:d.date,time:d.time,source:d.source,text:d.text,tags:d.tags.slice(),_key:d._key,_id:d._id,images:d.images||[],_createdAt:d._createdAt||'',_hidden:HIDDEN_HASHES.indexOf(hashKey(d.text))!==-1};
     });
     var ov=getOverrides();
     DATA.forEach(function(d){
@@ -338,8 +357,8 @@
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function isSolo(d){return d.tags.some(function(t){return SOLO.indexOf(t)!==-1;});}
   function viewItems(v){
-    if(v==='思考')return DATA.filter(function(d){return !d._deleted&&!isSolo(d);});
-    return DATA.filter(function(d){return !d._deleted&&d.tags.indexOf(v)!==-1;});
+    if(v==='思考')return DATA.filter(function(d){return !d._deleted&&!(softOn&&d._hidden)&&!isSolo(d);});
+    return DATA.filter(function(d){return !d._deleted&&!(softOn&&d._hidden)&&d.tags.indexOf(v)!==-1;});
   }
   function sortDate(a){return a.slice().sort(function(x,y){
     if(!x.date&&!y.date)return 0;if(!x.date)return 1;if(!y.date)return -1;
@@ -495,6 +514,20 @@
   clearBtn.addEventListener('click',function(){
     searchInput.value='';state.q='';clearBtn.classList.remove('show');
     render();searchInput.focus();
+  });
+  /* 尖锐情绪开关：默认收起，关闭后才显示 */
+  var softToggle=document.getElementById('softToggle');
+  var softLabel=document.getElementById('softLabel');
+  function syncToggleUI(){
+    softToggle.classList.toggle('on',softOn);
+    softToggle.setAttribute('aria-pressed',softOn?'true':'false');
+    softLabel.textContent=softOn?'收起尖锐情绪':'显示全部情绪';
+  }
+  syncToggleUI();
+  softToggle.addEventListener('click',function(){
+    softOn=!softOn;
+    try{localStorage.setItem('sylvan_soft_filter',softOn?'1':'0');}catch(e){}
+    syncToggleUI();render();
   });
   var overlay=document.getElementById('editOverlay');
   var ecArea=document.getElementById('ecArea');
