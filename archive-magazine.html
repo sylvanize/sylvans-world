@@ -349,6 +349,8 @@
   var HIDDEN_HASHES=["1gimc57","1fp4mme","1o9v160","1akthj","1bahz2h","1axxprv","1i9q9n","1bt1xpu","hfq1cm","1tchxtq","3fkd5f","ujmn67","3778u1","1gufnt4","n2aos1","16fsltr","8gs8k6","3oxxy1","1pdil81","43nmu","1duue38","xok4yu","1q634yc","1nog6g","1i446tk","17lx2oa","199luvd","6bxk9","1l3fgb1","1wt9coj","30ci4h","5gixjw","1mzsome","1cjsd9z","7407pw","jczn0o","4yz5o","1rgyrho","iy8j2p","198x3ti","1vzw5iq","1j7kd60","xkpr9c","1nn9086","d8k7on","kshy5w","uiyxyo","3pu1o5","25g65q","1la82fm","3yhld","4exzsa","1xww9lm","1x9uivm","1h9ce6w","r8w0qm","jp1puv","3yf60","iy1x0n"];
   var softOn=(function(){try{return localStorage.getItem('sylvan_soft_filter')!=='0';}catch(e){return true;}})();
   var CUSTOM_HIDDEN_KEY='sylvan_hidden_hashes';
+  var cloudHidden=[];      // 云端共享的隐藏哈希
+  var hiddenRowId=null;    // 云端设置行的 id
   function getCustomHidden(){
     try{return JSON.parse(localStorage.getItem(CUSTOM_HIDDEN_KEY)||'[]');}catch(e){return [];}
   }
@@ -357,7 +359,41 @@
   }
   function isHiddenText(text){
     var h=hashKey(text);
-    return HIDDEN_HASHES.indexOf(h)!==-1 || getCustomHidden().indexOf(h)!==-1;
+    if(HIDDEN_HASHES.indexOf(h)!==-1)return true;
+    if(cloudHidden.indexOf(h)!==-1)return true;
+    if(getCustomHidden().indexOf(h)!==-1)return true;
+    return false;
+  }
+  // 启动时：把本机已有的隐藏合并上云，再以云端为准
+  function syncHiddenToCloud(){
+    return window.SUPA.loadHidden().then(function(rows){
+      rows=rows||[];
+      var row=rows[0];
+      var cloud=(row&&row.tags)?row.tags.slice():[];
+      var local=getCustomHidden();
+      var merged=cloud.slice();
+      local.forEach(function(h){if(merged.indexOf(h)===-1)merged.push(h);});
+      hiddenRowId=row?row.id:null;
+      return window.SUPA.saveHidden(hiddenRowId,merged).then(function(res){
+        if(!hiddenRowId&&res&&res[0]&&res[0].id)hiddenRowId=res[0].id;
+        cloudHidden=merged;
+        saveCustomHidden(merged);
+        return merged;
+      });
+    });
+  }
+  // 编辑器里切换某条隐藏，并写回云端
+  function setEntryHidden(entry,hide){
+    var h=hashKey(entry.text);
+    var list=cloudHidden.slice();
+    var idx=list.indexOf(h);
+    if(hide&&idx===-1)list.push(h);
+    if(!hide&&idx!==-1)list.splice(idx,1);
+    return window.SUPA.saveHidden(hiddenRowId,list).then(function(res){
+      if(!hiddenRowId&&res&&res[0]&&res[0].id)hiddenRowId=res[0].id;
+      cloudHidden=list;
+      saveCustomHidden(list);
+    });
   }
   function getOverrides(){
     try{return JSON.parse(localStorage.getItem(EDIT_KEY)||'{}');}catch(e){return {};}
@@ -644,16 +680,19 @@
   ecHide.addEventListener('click',function(){
     var d=currentEntry(editingKey);
     if(!d)return;
-    var h=hashKey(d.text);
-    var custom=getCustomHidden();
-    var idx=custom.indexOf(h);
-    if(idx!==-1){custom.splice(idx,1);}else{custom.push(h);}
-    saveCustomHidden(custom);
-    rebuild();render();
-    var cur=currentEntry(editingKey);
-    var hiddenNow=cur&&cur._hidden;
-    ecHide.classList.toggle('on',!!hiddenNow);
-    ecHide.textContent=hiddenNow?'取消隐藏':'隐藏本条';
+    var wantHide=!d._hidden;
+    ecHide.disabled=true;
+    setEntryHidden(d,wantHide).then(function(){
+      rebuild();render();
+      var cur=currentEntry(editingKey);
+      var hiddenNow=cur&&cur._hidden;
+      ecHide.classList.toggle('on',!!hiddenNow);
+      ecHide.textContent=hiddenNow?'取消隐藏':'隐藏本条';
+    }).catch(function(e){
+      alert('隐藏同步失败：'+e.message);
+    }).then(function(){
+      ecHide.disabled=false;
+    });
   });
 
   /* 点开博文：居中卡片展示完整内容 */
@@ -784,6 +823,9 @@
       return {date:r.date||'',time:r.time||'',source:r.source||'',text:r.text||'',tags:r.tags||['日记'],_id:r.id,images:r.images||[],_createdAt:r.created_at||''};
     });
     DATA.forEach(function(d){d._key=String(d._id||hashKey(d.text));});
+    // 先同步隐藏列表（本机旧列表合并上云，再以云端为准），失败也不阻塞正文
+    return syncHiddenToCloud().catch(function(){return null;});
+  }).then(function(){
     RAW=DATA.slice();
     rebuild();renderFilters();render();maybeWelcome();
   }).catch(function(e){
