@@ -136,15 +136,14 @@
     font-family:inherit;font-size:13px;letter-spacing:.1em;padding:11px 34px;min-height:44px;cursor:pointer;}
   /* 尖锐情绪过滤开关 */
   .soft-row{display:flex;justify-content:flex-end;margin-top:12px;}
-  .soft-toggle{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:0 14px;
-    border:1px solid #ddd;border-radius:20px;background:#fff;font-family:inherit;font-size:12px;
-    letter-spacing:.05em;color:#666;cursor:pointer;transition:all .2s ease;}
-  .soft-toggle .sw{width:30px;height:18px;border-radius:10px;background:#ddd;position:relative;transition:background .2s ease;flex-shrink:0;}
-  .soft-toggle .sw::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
-    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s ease;}
-  .soft-toggle.on{background:#111;border-color:#111;color:#fff;}
-  .soft-toggle.on .sw{background:#555;}
-  .soft-toggle.on .sw::after{transform:translateX(12px);}
+  .soft-toggle{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;
+    padding:0;background:transparent;border:none;cursor:pointer;}
+  .soft-toggle .sw{width:40px;height:24px;border-radius:13px;background:#d5d5d5;position:relative;
+    transition:background .2s ease;flex-shrink:0;}
+  .soft-toggle .sw::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s ease;}
+  .soft-toggle.on .sw{background:#111;}
+  .soft-toggle.on .sw::after{transform:translateX(16px);}
   @media(min-width:860px){
     .appbar{padding-top:22px;}
     .content{padding-top:10px;}
@@ -168,8 +167,8 @@
       <button class="clear-btn" id="clearBtn" aria-label="清除">✕</button>
     </div>
     <div class="soft-row">
-      <button class="soft-toggle on" id="softToggle" aria-pressed="true">
-        <span class="sw"></span><span id="softLabel">收起尖锐情绪</span>
+      <button class="soft-toggle on" id="softToggle" aria-pressed="true" aria-label="切换尖锐情绪显示" title="切换尖锐情绪">
+        <span class="sw"></span>
       </button>
     </div>
     <nav class="tabs" id="tabs"></nav>
@@ -517,11 +516,9 @@
   });
   /* 尖锐情绪开关：默认收起，关闭后才显示 */
   var softToggle=document.getElementById('softToggle');
-  var softLabel=document.getElementById('softLabel');
   function syncToggleUI(){
     softToggle.classList.toggle('on',softOn);
     softToggle.setAttribute('aria-pressed',softOn?'true':'false');
-    softLabel.textContent=softOn?'收起尖锐情绪':'显示全部情绪';
   }
   syncToggleUI();
   softToggle.addEventListener('click',function(){
