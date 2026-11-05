@@ -631,9 +631,7 @@
       moods = moods.filter(function (x) { return x.id !== editingId; });
       lsSet('sylvan_moods', moods);
     }
-    if (rec && rec._supaId && window.SUPA) {
-      window.SUPA.remove(rec._supaId).catch(function(){});
-    }
+    /* 本子删除只移除本地记录，不再软删云端，保证 archive 里仍保留该条 */
     closeEditor();
     renderCurrent();
     toast('已删除');
