@@ -227,9 +227,21 @@
     <div id="viewContent"></div>
   </div>
 </div>
+<script type="importmap">
+{
+  "imports": {
+    "onnxruntime-web/webgpu": "./js/vendor/ort/ort.webgpu.bundle.min.mjs",
+    "onnxruntime-common": "./js/vendor/ort/ort-common.mjs"
+  }
+}
+</script>
 <script src="js/archive-data.js"></script>
 <script src="js/synced-data.js"></script>
 <script src="js/supabase-sync.js"></script>
+<script src="js/corridor-select.js"></script>
+<script src="js/corridor-data.js"></script>
+<script src="js/corridor-ui.js"></script>
+<script src="js/corridor-encoder.js"></script>
 <script>
 (function(){
   var DATA=[];
@@ -677,6 +689,7 @@
   var viewOverlay=document.getElementById('viewOverlay');
   var viewContent=document.getElementById('viewContent');
   function openView(key){
+    if(window.CorridorUI && CorridorUI.show(key,null))return;
     var d=currentEntry(key);
     if(!d)return;
     var lines=d.text.split('\n');
@@ -697,7 +710,7 @@
     viewContent.innerHTML=html;
     viewOverlay.classList.add('open');
   }
-  function closeView(){viewOverlay.classList.remove('open');}
+  function closeView(){viewOverlay.classList.remove('open');if(window.CorridorUI)CorridorUI.close();}
   document.getElementById('viewClose').addEventListener('click',closeView);
   viewOverlay.addEventListener('click',function(ev){if(ev.target===viewOverlay)closeView();});
 
@@ -724,6 +737,7 @@
       window.SUPA.update(d._id,patch).then(function(){
         for(var i=0;i<RAW.length;i++){if(RAW[i]._id===d._id){RAW[i].text=txt;RAW[i].tags=newTags;if(newDate){RAW[i].date=newDate;RAW[i].time=newTime;}break;}}
         rebuild();render();closeEditor();
+        if(window.CorridorEncoder){CorridorEncoder.encode(txt).then(function(v){CorridorData.addRuntimeVector(d._id,v);}).catch(function(){});}
       }).catch(function(e){alert('保存失败：'+e.message);});
     }else{
       var ov=getOverrides();
@@ -762,6 +776,36 @@
     searchInput.value='';clearBtn.classList.remove('show');
     rebuild();renderFilters();render();
   });
+  function initCorridor(){
+    if(!window.CorridorData||!window.CorridorUI)return;
+    var overlay=document.getElementById('viewOverlay');
+    var card=document.getElementById('viewCard');
+    var content=document.getElementById('viewContent');
+    CorridorUI.init({overlay:overlay,card:card,content:content,
+      data:CorridorData,sel:CorridorSelect.selectCorridor,
+      getEntries:function(){return DATA;}});
+    CorridorData.ready().then(function(){
+      if(CorridorData.isEnabled())reconcileVectors();
+    });
+  }
+  // 给离线池里没有向量的帖子（新写/同步来的）在后台补算，立即进入本机候选池
+  function reconcileVectors(){
+    if(!window.CorridorEncoder)return;
+    var missing=DATA.filter(function(d){
+      var id=d._id!=null?d._id:d._key;
+      return !CorridorData.getPostVector(id);
+    });
+    if(!missing.length)return;
+    function next(i){
+      if(i>=missing.length)return;
+      var d=missing[i],id=d._id!=null?d._id:d._key;
+      CorridorEncoder.encode(d.text).then(function(vec){
+        CorridorData.addRuntimeVector(id,vec);
+      }).catch(function(){}).then(function(){next(i+1);});
+    }
+    next(0);
+  }
+
   window.SUPA.load().then(function(rows){
     if(rows.length){
       // 只要成功读到过数据，就永久关掉“自动灌库”，避免以后某次空响应把已删数据重新灌回来
@@ -787,12 +831,14 @@
   }).then(function(){
     RAW=DATA.slice();
     rebuild();renderFilters();render();
+    initCorridor();
   }).catch(function(e){
     alert('云端连接失败，使用本地数据：'+e.message);
     DATA=LOCAL_DATA.slice();
     DATA.forEach(function(d){d._key=hashKey(d.text);});
     RAW=DATA;
     rebuild();renderFilters();render();
+    initCorridor();
   });
 })();
 </script>
