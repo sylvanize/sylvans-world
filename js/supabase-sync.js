@@ -3,6 +3,20 @@
   var SUPA_URL='https://addjmwpaeitccrhlarko.supabase.co';
   var SUPA_KEY='sb_publishable_4QJlJpLIbmcrolCaFJuDzA_6Ws2jeJk';
 
+  // 超时保护：网络静默丢包时 fetch 会一直 pending，导致页面永久转圈。
+  // 到点不返回就 reject，让上层走本地数据兜底。
+  function withTimeout(p, ms, label){
+    var timer;
+    var timeout = new Promise(function(_, reject){
+      timer = setTimeout(function(){ reject(new Error((label || '请求') + '超时')); }, ms);
+    });
+    return Promise.race([p, timeout]).then(function(v){
+      clearTimeout(timer); return v;
+    }, function(e){
+      clearTimeout(timer); throw e;
+    });
+  }
+
   // 用 fetch 直接调 REST API，不引 SDK
   function supa(path, opts){
     opts = opts || {};
@@ -11,10 +25,11 @@
       'Authorization': 'Bearer ' + SUPA_KEY,
       'Content-Type': 'application/json'
     }, opts.headers || {});
-    return fetch(SUPA_URL + '/rest/v1/' + path, opts).then(function(r){
+    var req = fetch(SUPA_URL + '/rest/v1/' + path, opts).then(function(r){
       if(!r.ok) return r.text().then(function(t){ throw new Error(t || ('HTTP '+r.status)); });
       return r.text().then(function(t){ return t ? JSON.parse(t) : null; });
     });
+    return withTimeout(req, 8000, '云端连接');
   }
 
   window.SUPA = {
@@ -52,7 +67,7 @@
     }
     return supa('entries', {method:'POST', headers:{'Prefer':'return=representation'},
       body:JSON.stringify([{source:SETTINGS_SOURCE, text:SETTINGS_TEXT, deleted:true,
-        date:'', time:'', tags:hashes, images:[]}]});
+        date:'', time:'', tags:hashes, images:[]}])});
   };
 
   // 本子心情页：只拉 source=心情 的未删除行（轻量，用于跨设备合并）
@@ -89,7 +104,7 @@
       var local = (window.ARCHIVE_DATA || []).slice();
       // 加上 synced
       var synced = window.SYLVAN_SYNCED || {notes:[], poems:[]};
-      function cdate(s){var m=(s||'').split('.');if(m.length!==3)return{iso:'',time:''};return{iso:m[0]+'-'+m[1]+'-'+m[2],time:m[0]+'年'+parseInt(m[1],10)+'月'+parseInt(m[2],10)+'日';}}
+      function cdate(s){var m=(s||'').split('.');if(m.length!==3)return{iso:'',time:''};return{iso:m[0]+'-'+m[1]+'-'+m[2],time:m[0]+'年'+parseInt(m[1],10)+'月'+parseInt(m[2],10)+'日'};}
       (synced.notes||[]).forEach(function(n){
         var d=cdate(n.date);
         local.push({date:d.iso,time:d.time,source:'本子',text:((n.title||'')+'\n'+(n.body||'')).trim(),tags:n.arcTags||['日记'],images:n.images||[]});
