@@ -52,7 +52,33 @@
     }
     return supa('entries', {method:'POST', headers:{'Prefer':'return=representation'},
       body:JSON.stringify([{source:SETTINGS_SOURCE, text:SETTINGS_TEXT, deleted:true,
-        date:'', time:'', tags:hashes, images:[]}])});
+        date:'', time:'', tags:hashes, images:[]}]});
+  };
+
+  // 本子心情页：只拉 source=心情 的未删除行（轻量，用于跨设备合并）
+  window.SUPA.loadMoods = function(){
+    return supa('entries?select=id,text,date,time,tags&source=eq.'+encodeURIComponent('心情')+
+      '&deleted=eq.false&order=date.desc,id.desc');
+  };
+
+  // 本子专用：按 source+text 找已存在的行（含已软删），有则更新（软删的恢复可见），无则插入。
+  // 返回 [{id:...}]，保证同一条内容不会因为重复保存而变成两条。
+  window.SUPA.upsertForNotebook = function(entry){
+    var q = 'entries?select=id,deleted&source=eq.' + encodeURIComponent(entry.source) +
+            '&text=eq.' + encodeURIComponent(entry.text) + '&order=id.asc&limit=1';
+    return supa(q, {headers:{'Prefer':'return=representation'}}).then(function(found){
+      if(found && found.length){
+        var id = found[0].id;
+        var patch = Object.assign({}, entry);
+        if(found[0].deleted) patch.deleted = false;
+        return supa('entries?id=eq.'+id, {method:'PATCH',
+          headers:{'Prefer':'return=representation'},
+          body:JSON.stringify(patch)}).then(function(rows){
+            return (rows && rows.length) ? rows : [{id:id}];
+          });
+      }
+      return window.SUPA.insert(entry);
+    });
   };
 
   // 首次：如果云端为空，把本地 archive-data.js + synced-data.js 的数据迁上去
@@ -63,7 +89,7 @@
       var local = (window.ARCHIVE_DATA || []).slice();
       // 加上 synced
       var synced = window.SYLVAN_SYNCED || {notes:[], poems:[]};
-      function cdate(s){var m=(s||'').split('.');if(m.length!==3)return{iso:'',time:''};return{iso:m[0]+'-'+m[1]+'-'+m[2],time:m[0]+'年'+parseInt(m[1],10)+'月'+parseInt(m[2],10)+'日'};}
+      function cdate(s){var m=(s||'').split('.');if(m.length!==3)return{iso:'',time:''};return{iso:m[0]+'-'+m[1]+'-'+m[2],time:m[0]+'年'+parseInt(m[1],10)+'月'+parseInt(m[2],10)+'日';}}
       (synced.notes||[]).forEach(function(n){
         var d=cdate(n.date);
         local.push({date:d.iso,time:d.time,source:'本子',text:((n.title||'')+'\n'+(n.body||'')).trim(),tags:n.arcTags||['日记'],images:n.images||[]});
