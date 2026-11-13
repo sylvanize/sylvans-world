@@ -568,7 +568,6 @@
 
   function compressImage(dataUrl, cb) {
     var img = new Image();
-    var img = new Image();
     img.onload = function () {
       var MAX = 1200, w = img.width, h = img.height;
       if (w > MAX || h > MAX) {
@@ -683,7 +682,6 @@
   /* ============ 设置 ============ */
   $('setBtn').addEventListener('click', function () {
     $('tokenInput').value = token;
-    $('tokenInput').value = token;
     $('cloudNameInput').value = cloudName;
     $('presetInput').value = preset;
     $('sheet').classList.add('open');
@@ -713,6 +711,7 @@
     }).then(function (r) {
       if (r.status === 404) return null;
       if (!r.ok) throw new Error('GitHub 读取失败 (' + r.status + ')');
+      expect:
       return r.json();
     });
   }
@@ -765,7 +764,8 @@
 
       mapped.forEach(function (m) {
         var hit = null;
-        for (var i = 0; i < remoteList.length; i++) {
+        var i = 0;
+        for (i = 0; i < remoteList.length; i++) {
           if (m.id && remoteList[i].id === m.id) { hit = remoteList[i]; break; }
         }
         if (hit) {
