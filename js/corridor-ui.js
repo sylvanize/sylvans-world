@@ -4,8 +4,8 @@
  *
  * 交互：
  *   - 当前帖为第一张（完整内容），其后叠放最多 5 张相关旧帖，仅露边缘
- *   - 指针/鼠标左滑跟手，松手按阈值切换或回弹
- *   - 点后方卡片 → 跳转该帖并生成新叠（不一步退回来源帖）
+ *   - 触摸/鼠标左滑跟手，松手按阈值切换或回弹；触控板横向滑动也能切
+ *   - 点图片 → 放大查看；点卡片 → 进入该帖并生成新叠（不一步退回来源帖）
  *   - ✕ 关闭，回到 archive 列表
  */
 (function (root, factory) {
@@ -25,6 +25,7 @@
   var maxPos = 0;
   var frontId = null;  // 当前最前帖 id（用于不一步退回）
   var drag = null;
+  var suppressClick = false;
 
   function esc(s) {
     return String(s == null ? '' : s)
@@ -49,15 +50,39 @@
       + 'text-transform:uppercase;margin-bottom:10px;}'
       + '.c-card .c-ex{font-family:"Noto Serif SC",serif;font-size:15px;line-height:1.95;'
       + 'color:#222;white-space:pre-wrap;word-break:break-word;}'
+      + '.c-card .c-enter{flex:none;text-align:center;padding:10px 0 12px;font-size:11px;'
+      + 'letter-spacing:.18em;color:var(--faint);border-top:1px solid var(--line);}'
       + '.c-card .c-edge-hint{position:absolute;right:10px;top:50%;width:6px;height:40px;'
       + 'border-radius:3px;background:var(--line);opacity:.7;}'
       + '.c-anim .c-card{transition:transform .28s cubic-bezier(.22,.61,.36,1),opacity .28s ease;}'
-      + '#corridorStack img{-webkit-user-drag:none;user-select:none;pointer-events:none;}'
+      + '#corridorStack img{-webkit-user-drag:none;user-select:none;}'
       + '#viewCard .vclose{z-index:200;position:absolute;}'
+      + '#cLightbox{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.92);'
+      + 'display:none;align-items:center;justify-content:center;padding:4vw;}'
+      + '#cLightbox.open{display:flex;}'
+      + '#cLightbox img{max-width:100%;max-height:100%;border-radius:6px;}'
+      + '#cLightbox .lb-close{position:absolute;top:14px;right:18px;color:#fff;font-size:26px;'
+      + 'background:none;border:none;cursor:pointer;}'
       + '@media (max-width:600px){#corridorStack{height:clamp(320px,60vh,660px);}}';
     var st = document.createElement('style');
     st.textContent = css;
     document.head.appendChild(st);
+  }
+
+  // 图片放大灯箱
+  function openLightbox(src) {
+    var lb = document.getElementById('cLightbox');
+    if (!lb) {
+      lb = document.createElement('div');
+      lb.id = 'cLightbox';
+      lb.innerHTML = '<button class="lb-close" aria-label="关闭">✕</button><img alt="">';
+      lb.addEventListener('click', function (ev) {
+        if (ev.target === lb || ev.target.classList.contains('lb-close')) lb.classList.remove('open');
+      });
+      document.body.appendChild(lb);
+    }
+    lb.querySelector('img').src = src;
+    lb.classList.add('open');
   }
 
   // 前卡完整内容（与 openView 一致的标记类）
@@ -151,6 +176,7 @@
         el.innerHTML = '<div class="c-scroll">'
           + '<div class="c-date">' + esc(date) + '</div>'
           + '<div class="c-ex">' + esc(c.excerpt.text) + '</div></div>'
+          + '<div class="c-enter">进入这篇 →</div>'
           + (i > 0 ? '<span class="c-edge-hint"></span>' : '');
       }
       stackEl.appendChild(el);
@@ -159,11 +185,21 @@
     renderAt(0);
   }
 
+  // 进入某张卡片对应的帖子
+  function enterCard(idx) {
+    var target = cards[idx].entry;
+    var curFront = Math.round(pos);
+    var source = cards[curFront].entry;
+    var sourceId = source._id != null ? source._id : source._key;
+    show(target._key, sourceId);
+  }
+
   // 手势
   function bindGestures() {
     stackEl.addEventListener('pointerdown', function (ev) {
       var cardEl = ev.target.closest('.c-card');
       if (!cardEl) return;
+      suppressClick = false;
       drag = {
         startX: ev.clientX, startY: ev.clientY, startPos: pos,
         idx: Number(cardEl.dataset.idx), decided: false, horizontal: false, moved: false
@@ -176,13 +212,14 @@
       if (!drag) return;
       var dx = ev.clientX - drag.startX, dy = ev.clientY - drag.startY;
       if (!drag.decided) {
-        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+        if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
         drag.decided = true;
-        drag.horizontal = Math.abs(dx) > Math.abs(dy);
+        // 横向更宽容：横向略占优即锁定，避免轻微斜向被误判成竖滑
+        drag.horizontal = Math.abs(dx) > Math.abs(dy) * 0.85;
       }
       if (!drag.horizontal) return;
       ev.preventDefault();
-      if (Math.abs(dx) > 10) drag.moved = true;
+      if (Math.abs(dx) > 10) { drag.moved = true; suppressClick = true; }
       var width = stackEl.clientWidth || 320;
       var span = width * 0.62;
       var np = drag.startPos - dx / span;
@@ -202,18 +239,35 @@
     stackEl.addEventListener('pointerup', end);
     stackEl.addEventListener('pointercancel', function () { snap(Math.round(pos)); drag = null; });
 
-    // 点后方卡片 → 跳转（拖拽后不触发）
+    // 触控板 / 横向滚轮：横向滑动切卡
+    var wheelAccum = 0, wheelLast = 0;
+    stackEl.addEventListener('wheel', function (ev) {
+      if (!active || maxPos === 0) return;
+      if (Math.abs(ev.deltaX) < Math.abs(ev.deltaY) || Math.abs(ev.deltaX) < 2) return;
+      ev.preventDefault();
+      var now = Date.now();
+      if (now - wheelLast > 250) wheelAccum = 0;
+      wheelLast = now;
+      wheelAccum += ev.deltaX;
+      if (wheelAccum > 70) { snap(Math.max(0, Math.round(pos) - 1)); wheelAccum = 0; }
+      else if (wheelAccum < -70) { snap(Math.min(maxPos, Math.round(pos) + 1)); wheelAccum = 0; }
+    }, { passive: false });
+
+    // 点击：图片放大 / 卡片进入（拖拽后不触发）
     stackEl.addEventListener('click', function (ev) {
+      if (suppressClick) { suppressClick = false; return; }
+      var img = ev.target.closest('img');
+      if (img) { openLightbox(img.src); return; }
       var el = ev.target.closest('.c-card');
       if (!el) return;
-      if (drag && drag.moved) return;
       var idx = Number(el.dataset.idx);
       var curFront = Math.round(pos);
-      if (idx === curFront) return;
-      var target = cards[idx].entry;
-      var source = cards[curFront].entry;
-      var sourceId = source._id != null ? source._id : source._key;
-      show(target._key, sourceId);
+      if (idx === curFront) {
+        // 已是最前：只有摘录卡（后卡）点击才进入，原始整帖不响应
+        if (cards[idx].kind === 'back') enterCard(idx);
+        return;
+      }
+      enterCard(idx);
     });
   }
 
@@ -235,7 +289,7 @@
 
     var sel = deps.sel(pool, pi, { excludeId: sourceId == null ? null : sourceId });
     var idToEntry = Object.create(null);
-    entries.forEach(function (e) { idToEntry[e._id != null ? e._id : e._key] = e; });
+    entries.forEach(function (e) { idToEntry[e._id != null ? e._id : e._id] = e; });
     var neighbors = sel.map(function (poolIdx) { return idToEntry[pool[poolIdx].id]; })
       .filter(Boolean);
 
@@ -269,6 +323,7 @@
     init: init,
     show: show,
     close: close,
+    openImage: openLightbox,
     isActive: function () { return active; }
   };
 });

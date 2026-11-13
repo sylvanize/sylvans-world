@@ -478,6 +478,14 @@
     makeRow('抽屉',DRAWERS,'drawer');
   }
   var entriesEl=document.getElementById('entries');
+  // 列表里点图片 → 放大查看，而不是打开帖子（事件委托，重渲染后仍生效）
+  entriesEl.addEventListener('click',function(ev){
+    var img=ev.target.closest('.entry-img');
+    if(!img)return;
+    ev.stopPropagation();
+    if(window.CorridorUI&&CorridorUI.openImage)CorridorUI.openImage(img.src);
+    else window.open(img.src,'_blank');
+  });
   var searchInfo=document.getElementById('searchInfo');
   var resetZone=document.getElementById('resetZone');
   var statsBar=document.getElementById('statsBar');
