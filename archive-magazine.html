@@ -81,6 +81,13 @@
     color:#222;white-space:pre-wrap;word-break:break-word;}
   .entry .imgs{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px;}
   .entry .entry-img{max-width:240px;max-height:240px;border-radius:2px;object-fit:cover;}
+  .ec-imgs{display:flex;flex-wrap:wrap;gap:10px;}
+  .ec-imgs .ec-empty{font-size:11px;color:var(--faint);letter-spacing:.06em;}
+  .ec-img-item{position:relative;width:84px;height:84px;border-radius:6px;overflow:hidden;border:1px solid var(--line);}
+  .ec-img-item img{width:100%;height:100%;object-fit:cover;display:block;}
+  .ec-img-del{position:absolute;top:3px;right:3px;width:20px;height:20px;padding:0;border:none;border-radius:50%;
+    background:rgba(0,0,0,.6);color:#fff;font-size:11px;line-height:20px;text-align:center;cursor:pointer;}
+  .ec-img-del:hover{background:rgba(0,0,0,.85);}
   .entry .meta{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:16px;
     font-size:10px;letter-spacing:.15em;color:var(--faint);text-transform:uppercase;}
   .entry .meta .flow{color:#999;}
@@ -211,6 +218,10 @@
       </div>
     </div>
     <textarea id="ecArea" spellcheck="false"></textarea>
+    <div style="margin-top:14px;">
+      <div style="font-size:10px;letter-spacing:.15em;color:var(--faint);text-transform:uppercase;margin-bottom:8px;">图片</div>
+      <div id="ecImgs" class="ec-imgs"></div>
+    </div>
     <div style="margin-top:14px;">
       <button id="ecHide" class="hide-btn" type="button">隐藏本条</button>
     </div>
@@ -400,6 +411,8 @@
       if(e.text){d.text=e.text;d._edited=true;}
       if(e.date){d.date=e.date;}
       if(e.time){d.time=e.time;}
+      if(e.tags){d.tags=e.tags.slice();}
+      if(e.images){d.images=e.images.slice();}
     });
   }
   rebuild();
@@ -604,7 +617,9 @@
   var ecThemes=document.getElementById('ecThemes');
   var ecDrawers=document.getElementById('ecDrawers');
   var ecHide=document.getElementById('ecHide');
+  var ecImgs=document.getElementById('ecImgs');
   var editingKey=null;
+  var editImages=[];
   var SOLO_CATS=['日记','回忆','随笔','俳句','碎片'];
   var curCat='日记', curTheme='做自己', curDrawer='还在想的事';
   function buildCatBtns(){
@@ -647,11 +662,28 @@
     if(p.length===3)return p[0]+'年'+parseInt(p[1],10)+'月'+parseInt(p[2],10)+'日';
     return '';
   }
+  function renderEditImages(){
+    ecImgs.innerHTML='';
+    if(!editImages.length){
+      var e=document.createElement('span');e.className='ec-empty';e.textContent='无图片';
+      ecImgs.appendChild(e);return;
+    }
+    editImages.forEach(function(src,i){
+      var item=document.createElement('div');item.className='ec-img-item';
+      var im=document.createElement('img');im.src=src;im.draggable=false;
+      var del=document.createElement('button');del.type='button';del.className='ec-img-del';
+      del.textContent='✕';del.setAttribute('aria-label','删除图片');
+      del.onclick=function(){editImages.splice(i,1);renderEditImages();};
+      item.appendChild(im);item.appendChild(del);ecImgs.appendChild(item);
+    });
+  }
   function openEditor(key){
     var d=currentEntry(key);
     if(!d)return;
     editingKey=key;
     ecArea.value=d.text;
+    editImages=(d.images||[]).slice();
+    renderEditImages();
     ecDate.value=fmtDate(d.date)||fmtDate(d.time);
     ecRestore.style.display=d._edited?'block':'none';
     var tags=d.tags||['日记'];
@@ -740,17 +772,17 @@
       newTags=[curCat];
     }
     if(d&&d._id){
-      var patch={text:txt,tags:newTags};
+      var patch={text:txt,tags:newTags,images:editImages};
       if(newDate){patch.date=newDate;patch.time=newTime;}
       window.SUPA.update(d._id,patch).then(function(){
-        for(var i=0;i<RAW.length;i++){if(RAW[i]._id===d._id){RAW[i].text=txt;RAW[i].tags=newTags;if(newDate){RAW[i].date=newDate;RAW[i].time=newTime;}break;}}
+        for(var i=0;i<RAW.length;i++){if(RAW[i]._id===d._id){RAW[i].text=txt;RAW[i].tags=newTags;RAW[i].images=editImages.slice();if(newDate){RAW[i].date=newDate;RAW[i].time=newTime;}break;}}
         rebuild();render();closeEditor();
         if(window.CorridorEncoder){CorridorEncoder.encode(txt).then(function(v){CorridorData.addRuntimeVector(d._id,v);}).catch(function(){});}
       }).catch(function(e){alert('保存失败：'+e.message);});
     }else{
       var ov=getOverrides();
       var prev=ov[editingKey]||{};
-      ov[editingKey]={text:txt,deleted:!!prev.deleted,tags:newTags,date:newDate||prev.date,time:newTime||prev.time};
+      ov[editingKey]={text:txt,deleted:!!prev.deleted,tags:newTags,date:newDate||prev.date,time:newTime||prev.time,images:editImages};
       saveOverrides(ov);
       rebuild();render();closeEditor();
     }
